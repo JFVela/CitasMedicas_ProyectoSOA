@@ -1,254 +1,201 @@
-import { useState } from "react";
+import { Outlet, useNavigate, useLocation } from "react-router-dom";
 import {
-  Box,
   Container,
-  CssBaseline,
-  Stepper,
-  Step,
-  StepLabel,
-  StepContent,
-  Typography,
+  Box,
   Paper,
-  Alert,
-  styled,
+  AppBar,
+  useTheme,
+  useMediaQuery,
 } from "@mui/material";
-import BotonAccion from "./Components/BotonAccion";
-import CampoTexto from "./Components/CampoTexto";
-import CampoSelect from "./Components/CampoSelect";
-import TablaHorarios from "./Components/TablaHorarios";
-import ResumenCita from "./Components/ResumenCita";
+import { TabContext } from "@mui/lab";
+import { useState, useEffect } from "react";
+import Navegador from "../../../Components/NavTabs";
 
-const PaperForm = styled(Paper)(({ theme }) => ({
-  padding: theme.spacing(3),
-  marginTop: theme.spacing(4),
-}));
+// ICONOS
+import HomeIcon from "@mui/icons-material/Home";
+import EventAvailableIcon from "@mui/icons-material/EventAvailable";
+import LoginIcon from "@mui/icons-material/Login";
+import InfoIcon from "@mui/icons-material/Info";
+import LogoutIcon from "@mui/icons-material/Logout";
+import DescriptionIcon from "@mui/icons-material/Description";
 
-const pasos = [
-  "DNI del paciente",
-  "Información personal",
-  "Sede y especialidad",
-  "Horario y síntomas",
-  "Método de pago",
-  "Resumen",
+const tabsPublicas = [
+  {
+    label: "Inicio",
+    value: "1",
+    icon: <HomeIcon />,
+    path: "/",
+  },
+  {
+    label: "Agendar Cita",
+    value: "2",
+    icon: <EventAvailableIcon />,
+    path: "/agendar",
+  },
+  {
+    label: "Iniciar Sesión",
+    value: "3",
+    icon: <LoginIcon />,
+    path: "/login",
+  },
 ];
 
-const sedes = ["Sede Central", "Sede Norte", "Sede Sur"];
-const especialidades = ["Cardiología", "Dermatología", "Pediatría"];
-const metodosPago = ["Efectivo", "Tarjeta", "Transferencia"];
-
-const horariosTabla = [
-  { id: 1, doctor: "Dr. Pérez", fecha: "12/06/25", hora: "08:00" },
-  { id: 2, doctor: "Dra. López", fecha: "12/06/25", hora: "09:00" },
-  { id: 3, doctor: "Dr. Gómez", fecha: "12/06/25", hora: "10:00" },
-  { id: 4, doctor: "Dra. Ruiz", fecha: "12/06/25", hora: "11:00" },
+const tabsPrivadas = [
+  {
+    label: "Inicio",
+    value: "1",
+    icon: <HomeIcon />,
+    path: "/paciente",
+  },
+  {
+    label: "Agendar Cita",
+    value: "2",
+    icon: <EventAvailableIcon />,
+    path: "/paciente/agendar",
+  },
+  {
+    label: "Mis Citas",
+    value: "4",
+    icon: <DescriptionIcon />,
+    path: "/paciente/detalle",
+  },
+  {
+    label: "Cerrar Sesión",
+    value: "5",
+    icon: <LogoutIcon />,
+    path: "/paciente/logout",
+  },
 ];
 
-export default function FormularioPaciente() {
-  const [paso, setPaso] = useState(0);
-  const [datos, setDatos] = useState({
-    dni: "",
-    correo: "",
-    telefono: "",
-    sede: "",
-    especialidad: "",
-    horario: "",
-    sintomas: "",
-    metodoPago: "",
-    doctor: "",
-    fecha: "",
-  });
-  const [errores, setErrores] = useState({});
-  const [alerta, setAlerta] = useState(false);
+function PaginaBasePaciente() {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+  const [mounted, setMounted] = useState(false);
+  const [usuario, setUsuario] = useState(null);
+  const [ultimaActividad, setUltimaActividad] = useState(Date.now());
 
-  const validarPaso = () => {
-    let nuevosErrores = {};
-    if (paso === 0 && !datos.dni) nuevosErrores.dni = "Ingrese el DNI";
-    if (paso === 1) {
-      if (!datos.correo) nuevosErrores.correo = "Ingrese el correo";
-      if (!datos.telefono) nuevosErrores.telefono = "Ingrese el teléfono";
-    }
-    if (paso === 2) {
-      if (!datos.sede) nuevosErrores.sede = "Seleccione la sede";
-      if (!datos.especialidad)
-        nuevosErrores.especialidad = "Seleccione la especialidad";
-    }
-    if (paso === 3) {
-      if (!datos.horario) nuevosErrores.horario = "Seleccione el horario";
-      if (!datos.sintomas) nuevosErrores.sintomas = "Describa los síntomas";
-    }
-    if (paso === 4 && !datos.metodoPago)
-      nuevosErrores.metodoPago = "Seleccione el método de pago";
-    setErrores(nuevosErrores);
-    return Object.keys(nuevosErrores).length === 0;
-  };
+  const tabs = usuario ? tabsPrivadas : tabsPublicas;
 
-  const manejarCambio = (e) => {
-    const { name, value } = e.target;
-    setDatos((prev) => ({ ...prev, [name]: value }));
-  };
+  useEffect(() => {
+    setMounted(true);
 
-  const seleccionarHorario = (fila) => {
-    setDatos({
-      ...datos,
-      horario: fila.hora,
-      doctor: fila.doctor,
-      fecha: fila.fecha,
-    });
-    setErrores({ ...errores, horario: undefined });
-  };
+    const intervalo = setInterval(() => {
+      if (usuario && Date.now() - ultimaActividad > 30 * 60 * 1000) {
+        // 30 minutos de inactividad
+        setUsuario(null);
+        navigate("/paciente");
+        alert("Sesión cerrada por inactividad");
+      }
+    }, 60 * 1000); // Verificar cada minuto
 
-  const handleNext = () => {
-    if (validarPaso()) setPaso((prev) => prev + 1);
-  };
+    const actualizarActividad = () => setUltimaActividad(Date.now());
+    window.addEventListener("click", actualizarActividad);
+    window.addEventListener("keypress", actualizarActividad);
 
-  const handleBack = () => {
-    setPaso((prev) => prev - 1);
-  };
+    return () => {
+      clearInterval(intervalo);
+      window.removeEventListener("click", actualizarActividad);
+      window.removeEventListener("keypress", actualizarActividad);
+    };
+  }, [usuario, ultimaActividad, navigate]);
 
-  const handleImprimir = () => {
-    setAlerta(true);
-    setTimeout(() => setAlerta(false), 2000);
-  };
+  const getTabValue = () =>
+    tabs.find((tab) => tab.path === location.pathname)?.value || false;
 
-  const renderFormularioPaso = (paso) => {
-    switch (paso) {
-      case 0:
-        return (
-          <CampoTexto
-            label="DNI"
-            name="dni"
-            value={datos.dni}
-            error={errores.dni}
-            onChange={manejarCambio}
-            autoFocus
-          />
-        );
-      case 1:
-        return (
-          <>
-            <CampoTexto
-              label="Correo electrónico"
-              name="correo"
-              value={datos.correo}
-              error={errores.correo}
-              onChange={manejarCambio}
-            />
-            <CampoTexto
-              label="Teléfono"
-              name="telefono"
-              value={datos.telefono}
-              error={errores.telefono}
-              onChange={manejarCambio}
-            />
-          </>
-        );
-      case 2:
-        return (
-          <>
-            <CampoSelect
-              label="Sede"
-              name="sede"
-              value={datos.sede}
-              opciones={sedes}
-              error={errores.sede}
-              onChange={manejarCambio}
-            />
-            <CampoSelect
-              label="Especialidad"
-              name="especialidad"
-              value={datos.especialidad}
-              opciones={especialidades}
-              error={errores.especialidad}
-              onChange={manejarCambio}
-            />
-          </>
-        );
-      case 3:
-        return (
-          <>
-            <Typography variant="subtitle1" sx={{ mb: 1 }}>
-              Seleccione un horario disponible
-            </Typography>
-            <TablaHorarios
-              horarios={horariosTabla}
-              horarioSeleccionado={datos.horario}
-              onSeleccionar={seleccionarHorario}
-            />
-            <Box sx={{ mb: 2 }}>
-              <CampoTexto
-                label="Descripción de síntomas"
-                name="sintomas"
-                value={datos.sintomas}
-                error={errores.sintomas}
-                onChange={manejarCambio}
-                multiline
-                minRows={2}
-              />
-            </Box>
-          </>
-        );
-      case 4:
-        return (
-          <CampoSelect
-            label="Método de pago"
-            name="metodoPago"
-            value={datos.metodoPago}
-            opciones={metodosPago}
-            error={errores.metodoPago}
-            onChange={manejarCambio}
-          />
-        );
-      case 5:
-        return (
-          <>
-            <ResumenCita datos={datos} />
-            <Box sx={{ mt: 2 }}>
-              <BotonAccion onClick={handleImprimir}>Imprimir</BotonAccion>
-              {alerta && (
-                <Alert severity="success" sx={{ mt: 2 }}>
-                  ¡Impresión simulada! 😄
-                </Alert>
-              )}
-            </Box>
-          </>
-        );
-      default:
-        return null;
+  const handleChange = (event, newValue) => {
+    const selectedTab = tabs.find((tab) => tab.value === newValue);
+
+    if (selectedTab.path === "/paciente/logout") {
+      setUsuario(null);
+      navigate("/paciente");
+    } else {
+      navigate(selectedTab.path);
     }
   };
+
+  // Simular autenticación simple
+  useEffect(() => {
+    if (location.pathname === "/paciente/login") {
+      const credenciales = prompt(
+        "Ingrese usuario (juan) y contraseña (123), separados por coma:"
+      );
+      if (credenciales) {
+        const [user, pass] = credenciales.split(",").map((x) => x.trim());
+        if (user === "juan" && pass === "123") {
+          setUsuario({ nombre: "Juan" });
+          setUltimaActividad(Date.now());
+          navigate("/paciente/detalle");
+        } else {
+          alert("Credenciales incorrectas");
+          navigate("/paciente");
+        }
+      } else {
+        navigate("/paciente");
+      }
+    }
+  }, [location.pathname, navigate]);
 
   return (
-    <Container maxWidth="sm">
-      <CssBaseline />
-      <PaperForm>
-        <Typography variant="h5" align="center" gutterBottom>
-          Registro de Cita Médica
-        </Typography>
-        <Stepper activeStep={paso} orientation="vertical">
-          {pasos.map((label, index) => (
-            <Step key={label}>
-              <StepLabel>{label}</StepLabel>
-              <StepContent>
-                <Box component="form" noValidate autoComplete="off">
-                  {renderFormularioPaso(index)}
-                  <Box sx={{ mt: 2, display: "flex", gap: 1 }}>
-                    {index > 0 && index < pasos.length && (
-                      <BotonAccion onClick={handleBack} variant="outlined">
-                        Anterior
-                      </BotonAccion>
-                    )}
-                    {index < pasos.length - 1 && (
-                      <BotonAccion variant="contained" onClick={handleNext}>
-                        {index === pasos.length - 2 ? "Finalizar" : "Siguiente"}
-                      </BotonAccion>
-                    )}
-                  </Box>
-                </Box>
-              </StepContent>
-            </Step>
-          ))}
-        </Stepper>
-      </PaperForm>
-    </Container>
+    <Box
+      sx={{
+        display: "flex",
+        flexDirection: "column",
+        minHeight: "100vh",
+        background: "linear-gradient(to bottom, #f5f7fa, #e4e8f0)",
+        opacity: mounted ? 1 : 0,
+        transition: "opacity 0.5s ease-in-out",
+      }}
+    >
+      <TabContext value={getTabValue()}>
+        <AppBar
+          position="sticky"
+          color="default"
+          elevation={3}
+          sx={{
+            background: "rgba(255, 255, 255, 0.9)",
+            borderBottom: "1px solid rgba(0, 0, 0, 0.05)",
+          }}
+        >
+          <Navegador
+            tabs={tabs}
+            currentValue={getTabValue()}
+            onChange={handleChange}
+            isMobile={isMobile}
+          />
+        </AppBar>
+
+        <Container
+          maxWidth="lg"
+          sx={{
+            mt: 4,
+            mb: 4,
+            flex: 1,
+            display: "flex",
+            flexDirection: "column",
+          }}
+        >
+          <Paper
+            elevation={2}
+            sx={{
+              p: { xs: 2, sm: 3 },
+              borderRadius: 2,
+              flex: 1,
+              backgroundColor: "rgba(255, 255, 255, 0.9)",
+              boxShadow: "0 4px 20px rgba(0, 0, 0, 0.05)",
+              transition: "all 0.3s ease-in-out",
+              "&:hover": {
+                boxShadow: "0 6px 25px rgba(0, 0, 0, 0.08)",
+              },
+            }}
+          >
+            <Outlet context={{ usuario }} />
+          </Paper>
+        </Container>
+      </TabContext>
+    </Box>
   );
 }
+
+export default PaginaBasePaciente;

@@ -2,9 +2,9 @@ import { Routes, Route } from "react-router-dom";
 
 // Pacientes
 import PaginaPaciente from "./Pages/Paciente/PaginaPaciente";
-import IngresarCita from "./Pages/Paciente/IngresarCita";
-import ListaCitas from "./Pages/Paciente/ListaCitas";
-import DetalleCita from "./Pages/Paciente/DetalleCita";
+import Agendar from "./Pages/Paciente/Agendar";
+import Inicio from "./Pages/Paciente/Inicio"
+import Login from "./Pages/Paciente/Login";
 
 // Doctor
 import PaginaDoctor from "./Pages/Doctor/PaginaDoctor";
@@ -24,9 +24,9 @@ function AppRoutes() {
     <Routes>
       {/* Rutas del Paciente */}
       <Route path="/" element={<PaginaPaciente />}>
-        <Route path="ingresar-cita" element={<IngresarCita />} />
-        <Route path="lista-citas" element={<ListaCitas />} />
-        <Route path="detalle-cita/:id" element={<DetalleCita />} />
+        <Route index element={<Inicio />} />
+        <Route path="agendar" element={<Agendar />} />
+        <Route path="login" element={<Login />} />
       </Route>
 
       {/* Rutas del Doctor */}

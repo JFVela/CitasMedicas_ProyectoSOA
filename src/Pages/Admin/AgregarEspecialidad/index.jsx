@@ -10,7 +10,6 @@ import { especialidadInicial } from "./data";
 
 // Cabeceras para la tabla de Especialidades
 const cabeceras = [
-  { id: "id", label: "ID" },
   { id: "especialidad", label: "Nombre de la Especialidad" },
   { id: "descripcion", label: "Descripción" },
   { id: "estado", label: "Estado" },
