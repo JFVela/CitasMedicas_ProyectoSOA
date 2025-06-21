@@ -16,6 +16,7 @@ import AgregarDoctor from "./Pages/Admin/AgregarDoctor";
 import AgregarEspecialidad from "./Pages/Admin/AgregarEspecialidad";
 import AgregarPaciente from "./Pages/Admin/AgregarPaciente";
 import CrudSede from "./Pages/Admin/GestionSede";
+import CrudHorario from "./Pages/Admin/GestionHorario";
 
 // Página de Error 404
 import Error404 from "./Pages/Error404";
@@ -41,6 +42,7 @@ function AppRoutes() {
         <Route path="gestionEspecialidad" element={<AgregarEspecialidad />} />
         <Route path="gestionPaciente" element={<AgregarPaciente />} />
         <Route path="gestionSede" element={<CrudSede />} />
+        <Route path="gestionHorario" element={<CrudHorario />} />
       </Route>
 
       {/* Ruta para errores */}

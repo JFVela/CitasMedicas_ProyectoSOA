@@ -56,6 +56,12 @@ const tabs = [
     icon: <DomainAddIcon />,
     path: "/admin/gestionSede", // Ruta temporal
   },
+      {
+    label: "Horarios",
+    value: "7",
+    icon: <DomainAddIcon />,
+    path: "/admin/gestionHorario", // Ruta temporal
+  },
 ];
 
 function PaginaBase() {
