@@ -17,6 +17,7 @@ import LocalHospitalIcon from "@mui/icons-material/LocalHospital"; // Doctores
 import MedicalServicesIcon from "@mui/icons-material/MedicalServices"; // Especialidades
 import GroupIcon from "@mui/icons-material/Group"; // Pacientes
 import AssignmentIcon from "@mui/icons-material/Assignment"; // Historial clínico
+import DomainAddIcon from '@mui/icons-material/DomainAdd';
 
 const tabs = [
   {
@@ -48,6 +49,12 @@ const tabs = [
     value: "5",
     icon: <AssignmentIcon />,
     path: "*", // Ruta temporal
+  },
+    {
+    label: "Sedes",
+    value: "6",
+    icon: <DomainAddIcon />,
+    path: "/admin/gestionSede", // Ruta temporal
   },
 ];
 
