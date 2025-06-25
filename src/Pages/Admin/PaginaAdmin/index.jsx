@@ -17,7 +17,9 @@ import LocalHospitalIcon from "@mui/icons-material/LocalHospital"; // Doctores
 import MedicalServicesIcon from "@mui/icons-material/MedicalServices"; // Especialidades
 import GroupIcon from "@mui/icons-material/Group"; // Pacientes
 import AssignmentIcon from "@mui/icons-material/Assignment"; // Historial clínico
-import DomainAddIcon from '@mui/icons-material/DomainAdd';
+import DomainAddIcon from "@mui/icons-material/DomainAdd";
+import AccessTimeFilledIcon from '@mui/icons-material/AccessTimeFilled';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 
 const tabs = [
   {
@@ -50,17 +52,23 @@ const tabs = [
     icon: <AssignmentIcon />,
     path: "*", // Ruta temporal
   },
-    {
+  {
     label: "Sedes",
     value: "6",
     icon: <DomainAddIcon />,
     path: "/admin/gestionSede", // Ruta temporal
   },
-      {
+  {
     label: "Horarios",
     value: "7",
-    icon: <DomainAddIcon />,
+    icon: <AccessTimeFilledIcon />,
     path: "/admin/gestionHorario", // Ruta temporal
+  },
+  {
+    label: "Disponibilidad",
+    value: "8",
+    icon: <CheckCircleIcon />,
+    path: "/admin/gestionDisponibilidad", // Ruta temporal
   },
 ];
 
