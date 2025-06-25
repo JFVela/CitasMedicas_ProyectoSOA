@@ -62,14 +62,32 @@ const TablaEspecialidades = ({
             }
             return palabra;
           },
-        }).then((result) => {
+        }).then(async (result) => {
           if (result.isConfirmed) {
-            onEliminar(especialidad.id);
-            Swal.fire(
-              "¡Eliminado!",
-              "La especialidad ha sido eliminada correctamente.",
-              "success"
-            );
+            try {
+              // Mostrar loading
+              Swal.fire({
+                title: "Eliminando...",
+                allowOutsideClick: false,
+                didOpen: () => {
+                  Swal.showLoading();
+                },
+              });
+
+              await onEliminar(especialidad.id);
+
+              Swal.fire(
+                "¡Eliminado!",
+                "La especialidad ha sido eliminada correctamente.",
+                "success"
+              );
+            } catch (error) {
+              Swal.fire(
+                "Error",
+                "No se pudo eliminar la especialidad. Inténtelo nuevamente.",
+                "error"
+              );
+            }
           }
         });
       }
@@ -115,7 +133,6 @@ const TablaEspecialidades = ({
           Agregar
         </Button>
       </Box>
-
       <TableContainer sx={{ maxHeight: 440 }}>
         <Table stickyHeader aria-label="tabla de especialidades">
           <TableHead>
@@ -141,12 +158,16 @@ const TablaEspecialidades = ({
                 ))}
                 <TableCell align="center">
                   <Tooltip title="Editar">
-                    <IconButton color="warning" onClick={() => onEditar(especialidad)}>
-                      <EditIcon />  
+                    <IconButton
+                      color="warning"
+                      onClick={() => onEditar(especialidad)}
+                    >
+                      <EditIcon />
                     </IconButton>
                   </Tooltip>
                   <Tooltip title="Eliminar">
-                    <IconButton color="error"
+                    <IconButton
+                      color="error"
                       onClick={() => confirmarEliminacion(especialidad)}
                     >
                       <DeleteIcon />
@@ -165,7 +186,6 @@ const TablaEspecialidades = ({
           </TableBody>
         </Table>
       </TableContainer>
-
       <TablePagination
         rowsPerPageOptions={[10, 20, 30]}
         component="div"

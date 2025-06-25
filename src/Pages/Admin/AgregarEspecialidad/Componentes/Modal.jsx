@@ -6,8 +6,8 @@ import Button from "@mui/material/Button";
 import TextField from "@mui/material/TextField";
 import MenuItem from "@mui/material/MenuItem";
 import { DialogActions, DialogContent } from "@mui/material";
+import CircularProgress from "@mui/material/CircularProgress";
 
-// Styled components
 const CampoFormulario = styled.div`
   width: 100%;
   display: flex;
@@ -19,6 +19,7 @@ const ModalEspecialidad = ({
   onGuardar,
   especialidad,
   cabeceras,
+  guardando = false,
 }) => {
   const [formulario, setFormulario] = useState({});
   const [errores, setErrores] = useState({});
@@ -29,7 +30,11 @@ const ModalEspecialidad = ({
     } else {
       const nuevoFormulario = {};
       cabeceras.forEach((cabecera) => {
-        nuevoFormulario[cabecera.id] = "";
+        if (cabecera.id === "estado") {
+          nuevoFormulario[cabecera.id] = "Activo"; // Estado por defecto
+        } else {
+          nuevoFormulario[cabecera.id] = "";
+        }
       });
       setFormulario(nuevoFormulario);
     }
@@ -42,7 +47,6 @@ const ModalEspecialidad = ({
       ...formulario,
       [name]: value,
     });
-
     if (errores[name]) {
       setErrores({
         ...errores,
@@ -76,7 +80,7 @@ const ModalEspecialidad = ({
   return (
     <Dialog
       open={abierto}
-      onClose={onCerrar}
+      onClose={!guardando ? onCerrar : undefined} // Prevenir cerrar mientras guarda
       fullWidth
       maxWidth="sm"
       disableEnforceFocus
@@ -107,6 +111,7 @@ const ModalEspecialidad = ({
                   error={!!errores[cabecera.id]}
                   helperText={errores[cabecera.id] || ""}
                   variant="outlined"
+                  disabled={guardando}
                 >
                   <MenuItem value="Activo">Activo</MenuItem>
                   <MenuItem value="Inactivo">Inactivo</MenuItem>
@@ -123,17 +128,28 @@ const ModalEspecialidad = ({
                   variant="outlined"
                   multiline={cabecera.id === "descripcion"}
                   rows={cabecera.id === "descripcion" ? 4 : 1}
+                  disabled={guardando}
                 />
               )}
             </CampoFormulario>
           ))}
         </DialogContent>
         <DialogActions sx={{ px: 3, pb: 2 }}>
-          <Button onClick={onCerrar} color="secondary">
+          <Button onClick={onCerrar} color="secondary" disabled={guardando}>
             Cancelar
           </Button>
-          <Button type="submit" color="primary" variant="contained">
-            {especialidad?.id ? "Actualizar" : "Guardar"}
+          <Button
+            type="submit"
+            color="primary"
+            variant="contained"
+            disabled={guardando}
+            startIcon={guardando ? <CircularProgress size={20} /> : null}
+          >
+            {guardando
+              ? "Guardando..."
+              : especialidad?.id
+              ? "Actualizar"
+              : "Guardar"}
           </Button>
         </DialogActions>
       </form>
