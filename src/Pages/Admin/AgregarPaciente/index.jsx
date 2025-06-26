@@ -1,22 +1,31 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ThemeProvider, createTheme } from "@mui/material/styles";
 import CssBaseline from "@mui/material/CssBaseline";
 import Container from "@mui/material/Container";
 import Typography from "@mui/material/Typography";
 import Box from "@mui/material/Box";
-import TablaPacientes from "../../../Components/TablaCrud";
-import ModalFormulario from "../../../Components/ModalFormulario";
-import { pacientesIniciales } from "./data";
+import CircularProgress from "@mui/material/CircularProgress";
+import Alert from "@mui/material/Alert";
 
-// Definición de las cabeceras de la tabla
+import TablaPacientes from "./Componentes/Tabla";
+import ModalFormularioPaciente from "./Componentes/Modal";
+
+import {
+  obtenerPacientes,
+  crearPaciente,
+  actualizarPaciente,
+  // eliminarPaciente, // No usar según reglas
+} from "./data";
+
+// Cabeceras para la tabla de Pacientes
 const cabeceras = [
-  { id: "nombre", label: "Nombre" },
-  { id: "apellido", label: "Apellido" },
-  { id: "edad", label: "Edad" },
-  { id: "genero", label: "Género" },
-  { id: "telefono", label: "Teléfono" },
-  { id: "email", label: "Email" },
-  { id: "direccion", label: "Dirección" },
+  { id: "nombres", label: "Nombres" },
+  { id: "apellidos", label: "Apellidos" },
+  { id: "dni", label: "DNI" },
+  { id: "correo", label: "Correo" },
+  { id: "celular", label: "Celular" },
+  { id: "sexo", label: "Sexo" },
+  { id: "estado", label: "Estado" },
 ];
 
 const theme = createTheme({
@@ -30,13 +39,33 @@ const theme = createTheme({
   },
 });
 
-function crudPaciente() {
-  const [pacientes, setPacientes] = useState(pacientesIniciales);
+function CrudPaciente() {
+  const [pacientes, setPacientes] = useState([]);
   const [modalAbierto, setModalAbierto] = useState(false);
   const [pacienteEditando, setPacienteEditando] = useState(null);
   const [busqueda, setBusqueda] = useState("");
   const [filasPerPagina, setFilasPerPagina] = useState(10);
   const [pagina, setPagina] = useState(0);
+  const [cargando, setCargando] = useState(true);
+  const [error, setError] = useState(null);
+  const [guardando, setGuardando] = useState(false);
+
+  useEffect(() => {
+    cargarPacientes();
+  }, []);
+
+  const cargarPacientes = async () => {
+    try {
+      setCargando(true);
+      setError(null);
+      const data = await obtenerPacientes();
+      setPacientes(data);
+    } catch (error) {
+      setError(error.message || "Error al cargar pacientes.");
+    } finally {
+      setCargando(false);
+    }
+  };
 
   const abrirModal = () => {
     setPacienteEditando(null);
@@ -53,48 +82,81 @@ function crudPaciente() {
     setModalAbierto(true);
   };
 
-  const guardarPaciente = (paciente) => {
-    if (paciente.id) {
-      // Actualizar paciente existente
-      setPacientes(pacientes.map((p) => (p.id === paciente.id ? paciente : p)));
-    } else {
-      // Agregar nuevo paciente
-      const nuevoPaciente = {
-        ...paciente,
-        id: Date.now().toString(),
-      };
-      setPacientes([...pacientes, nuevoPaciente]);
+  const guardarPaciente = async (paciente) => {
+    try {
+      setGuardando(true);
+      setError(null);
+
+      if (paciente.id) {
+        const actualizado = await actualizarPaciente(paciente.id, paciente);
+        setPacientes(
+          pacientes.map((p) => (p.id === paciente.id ? actualizado : p))
+        );
+      } else {
+        const nuevo = await crearPaciente(paciente);
+        setPacientes([...pacientes, nuevo]);
+      }
+
+      cerrarModal();
+    } catch (error) {
+      setError("Error al guardar paciente: " + error.message);
+    } finally {
+      setGuardando(false);
     }
-    cerrarModal();
   };
 
-  const eliminarPaciente = (id) => {
-    setPacientes(pacientes.filter((paciente) => paciente.id !== id));
-  };
+  // const manejarEliminarPaciente = async (id) => {
+  //   try {
+  //     await eliminarPaciente(id);
+  //     setPacientes(pacientes.filter((p) => p.id !== id));
+  //   } catch (error) {
+  //     setError("Error al eliminar paciente: " + error.message);
+  //   }
+  // };
 
-  const manejarBusqueda = (evento) => {
-    setBusqueda(evento.target.value);
+  const manejarBusqueda = (e) => {
+    setBusqueda(e.target.value.toLowerCase());
     setPagina(0);
   };
 
-  const manejarCambioPagina = (evento, nuevaPagina) => {
+  const manejarCambioPagina = (e, nuevaPagina) => {
     setPagina(nuevaPagina);
   };
 
-  const manejarCambioFilasPorPagina = (evento) => {
-    setFilasPerPagina(Number.parseInt(evento.target.value, 10));
+  const manejarCambioFilasPorPagina = (e) => {
+    setFilasPerPagina(Number.parseInt(e.target.value, 10));
     setPagina(0);
   };
 
-  // Filtrar pacientes según la búsqueda
-  const pacientesFiltrados = pacientes.filter((paciente) => {
-    const terminoBusqueda = busqueda.toLowerCase();
+  const pacientesFiltrados = pacientes.filter((p) => {
+    const termino = busqueda.toLowerCase();
     return (
-      paciente.nombre.toLowerCase().includes(terminoBusqueda) ||
-      paciente.apellido.toLowerCase().includes(terminoBusqueda) ||
-      paciente.email.toLowerCase().includes(terminoBusqueda)
+      p.nombres.toLowerCase().includes(termino) ||
+      p.apellidos.toLowerCase().includes(termino) ||
+      p.dni.toLowerCase().includes(termino) ||
+      p.estado.toLowerCase().includes(termino)
     );
   });
+
+  if (cargando) {
+    return (
+      <ThemeProvider theme={theme}>
+        <CssBaseline />
+        <Container maxWidth="lg">
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              minHeight: "50vh",
+            }}
+          >
+            <CircularProgress size={60} />
+          </Box>
+        </Container>
+      </ThemeProvider>
+    );
+  }
 
   return (
     <ThemeProvider theme={theme}>
@@ -105,11 +167,21 @@ function crudPaciente() {
             Gestión de Pacientes
           </Typography>
 
+          {error && (
+            <Alert
+              severity="error"
+              sx={{ mb: 2 }}
+              onClose={() => setError(null)}
+            >
+              {error}
+            </Alert>
+          )}
+
           <TablaPacientes
             cabeceras={cabeceras}
             pacientes={pacientesFiltrados}
             onEditar={editarPaciente}
-            onEliminar={eliminarPaciente}
+            // onEliminar={manejarEliminarPaciente} // No usar según reglas
             onAgregar={abrirModal}
             busqueda={busqueda}
             onBusquedaCambio={manejarBusqueda}
@@ -119,12 +191,13 @@ function crudPaciente() {
             onCambioFilasPorPagina={manejarCambioFilasPorPagina}
           />
 
-          <ModalFormulario
+          <ModalFormularioPaciente
             abierto={modalAbierto}
             onCerrar={cerrarModal}
             onGuardar={guardarPaciente}
             paciente={pacienteEditando}
             cabeceras={cabeceras}
+            guardando={guardando}
           />
         </Box>
       </Container>
@@ -132,4 +205,4 @@ function crudPaciente() {
   );
 }
 
-export default crudPaciente;
+export default CrudPaciente;

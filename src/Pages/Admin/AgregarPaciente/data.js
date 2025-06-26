@@ -1,122 +1,120 @@
-export const pacientesIniciales = [
-  {
-    id: "1",
-    nombre: "Juan",
-    apellido: "Figueroa Vela",
-    edad: "35",
-    genero: "Masculino",
-    telefono: "9876543210",
-    email: "juan.figueroa@ejemplo.com",
-    direccion: "Av. Principal 123",
-  },
-  {
-    id: "2",
-    nombre: "María",
-    apellido: "Rodríguez López",
-    edad: "28",
-    genero: "Femenino",
-    telefono: "9876543211",
-    email: "maria.rodriguez@ejemplo.com",
-    direccion: "Calle Secundaria 456",
-  },
-  {
-    id: "3",
-    nombre: "Carlos",
-    apellido: "Gómez Pérez",
-    edad: "42",
-    genero: "Masculino",
-    telefono: "9876543212",
-    email: "carlos.gomez@ejemplo.com",
-    direccion: "Jr. Los Pinos 789",
-  },
-  {
-    id: "4",
-    nombre: "Ana",
-    apellido: "Martínez Sánchez",
-    edad: "31",
-    genero: "Femenino",
-    telefono: "9876543213",
-    email: "ana.martinez@ejemplo.com",
-    direccion: "Av. Las Flores 234",
-  },
-  {
-    id: "5",
-    nombre: "Pedro",
-    apellido: "Díaz Torres",
-    edad: "45",
-    genero: "Masculino",
-    telefono: "9876543214",
-    email: "pedro.diaz@ejemplo.com",
-    direccion: "Calle Los Olivos 567",
-  },
-  {
-    id: "6",
-    nombre: "Laura",
-    apellido: "Fernández Ruiz",
-    edad: "29",
-    genero: "Femenino",
-    telefono: "9876543215",
-    email: "laura.fernandez@ejemplo.com",
-    direccion: "Jr. Las Palmeras 890",
-  },
-  {
-    id: "7",
-    nombre: "Miguel",
-    apellido: "Hernández Castro",
-    edad: "38",
-    genero: "Masculino",
-    telefono: "9876543216",
-    email: "miguel.hernandez@ejemplo.com",
-    direccion: "Av. Central 345",
-  },
-  {
-    id: "8",
-    nombre: "Sofía",
-    apellido: "Vargas Morales",
-    edad: "33",
-    genero: "Femenino",
-    telefono: "9876543217",
-    email: "sofia.vargas@ejemplo.com",
-    direccion: "Calle Los Cedros 678",
-  },
-  {
-    id: "9",
-    nombre: "Javier",
-    apellido: "Ortega Mendoza",
-    edad: "41",
-    genero: "Masculino",
-    telefono: "9876543218",
-    email: "javier.ortega@ejemplo.com",
-    direccion: "Jr. Las Azucenas 901",
-  },
-  {
-    id: "10",
-    nombre: "Carmen",
-    apellido: "Navarro Jiménez",
-    edad: "36",
-    genero: "Femenino",
-    telefono: "9876543219",
-    email: "carmen.navarro@ejemplo.com",
-    direccion: "Av. Los Laureles 234",
-  },
-  {
-    id: "11",
-    nombre: "Roberto",
-    apellido: "Ramos Gutiérrez",
-    edad: "44",
-    genero: "Masculino",
-    telefono: "9876543220",
-    email: "roberto.ramos@ejemplo.com",
-    direccion: "Calle Los Robles 567",
-  },
-  {
-    id: "12",
-    nombre: "Patricia",
-    apellido: "Flores Medina",
-    edad: "30",
-    genero: "Femenino",
-    telefono: "9876543221",
-    email: "patricia.flores@ejemplo.com",
-    direccion: "Jr. Las Margaritas 890",
-  },
-]
+// Servicio para manejar las llamadas a la API de pacientes
+const API_BASE_URL =
+  (typeof process !== "undefined" && process.env.NEXT_PUBLIC_API_URL
+    ? process.env.NEXT_PUBLIC_API_URL.replace(/\/$/, "")
+    : "http://localhost:8091") + "/api/pacientes";
+
+// Función para mapear datos de la API al formato local
+const mapearDesdeAPI = (pacienteAPI) => ({
+  id: pacienteAPI.idpaciente.toString(),
+  nombres: pacienteAPI.nombres,
+  apellidos: pacienteAPI.apellidos,
+  dni: pacienteAPI.dni,
+  correo: pacienteAPI.correo,
+  celular: pacienteAPI.celular,
+  direccion: pacienteAPI.direccion,
+  fechaNacimiento: pacienteAPI.fechaNacimiento, // formato ISO string (yyyy-MM-dd)
+  sexo: pacienteAPI.sexo,
+  estado: pacienteAPI.estado === 1 ? "Activo" : "Inactivo",
+});
+
+// Función para mapear datos locales al formato de la API
+const mapearHaciaAPI = (pacienteLocal) => ({
+  nombres: pacienteLocal.nombres,
+  apellidos: pacienteLocal.apellidos,
+  dni: pacienteLocal.dni,
+  correo: pacienteLocal.correo,
+  celular: pacienteLocal.celular,
+  direccion: pacienteLocal.direccion,
+  fechaNacimiento: pacienteLocal.fechaNacimiento, // formato "yyyy-MM-dd"
+  sexo: pacienteLocal.sexo,
+  estado: pacienteLocal.estado === "Activo" ? 1 : 0,
+});
+
+// Obtener todos los pacientes
+export const obtenerPacientes = async () => {
+  try {
+    const response = await fetch(API_BASE_URL, { mode: "cors" });
+    if (!response.ok) {
+      throw new Error(`Error ${response.status}: ${response.statusText}`);
+    }
+    const data = await response.json();
+    return data.map(mapearDesdeAPI);
+  } catch (error) {
+    if (error instanceof TypeError) {
+      throw new Error(
+        "No se pudo conectar con el servidor. Verifica que el backend esté en línea y que permita CORS."
+      );
+    }
+    throw error;
+  }
+};
+
+// Crear nuevo paciente
+export const crearPaciente = async (paciente) => {
+  try {
+    const response = await fetch(API_BASE_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(mapearHaciaAPI(paciente)),
+      mode: "cors",
+    });
+
+    if (!response.ok) {
+      throw new Error(`Error ${response.status}: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    return mapearDesdeAPI(data);
+  } catch (error) {
+    console.error("Error al crear paciente:", error);
+    throw error;
+  }
+};
+
+// Actualizar paciente
+export const actualizarPaciente = async (id, paciente) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/${id}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(mapearHaciaAPI(paciente)),
+      mode: "cors",
+    });
+
+    if (!response.ok) {
+      throw new Error(`Error ${response.status}: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    return mapearDesdeAPI(data);
+  } catch (error) {
+    console.error("Error al actualizar paciente:", error);
+    throw error;
+  }
+};
+
+/*
+// Eliminar paciente — NO USAR por reglas de negocio
+export const eliminarPaciente = async (id) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/${id}`, {
+      method: "DELETE",
+      mode: "cors",
+    });
+
+    if (!response.ok) {
+      throw new Error(`Error ${response.status}: ${response.statusText}`);
+    }
+
+    return true;
+  } catch (error) {
+    console.error("Error al eliminar paciente:", error);
+    throw error;
+  }
+};
+*/
