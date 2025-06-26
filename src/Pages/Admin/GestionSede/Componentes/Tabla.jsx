@@ -11,18 +11,15 @@ import Button from "@mui/material/Button";
 import Box from "@mui/material/Box";
 import IconButton from "@mui/material/IconButton";
 import Tooltip from "@mui/material/Tooltip";
-import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
 import AddIcon from "@mui/icons-material/Add";
 import SearchIcon from "@mui/icons-material/Search";
 import InputAdornment from "@mui/material/InputAdornment";
-import Swal from "sweetalert2";
 
 const TablaSedes = ({
   cabeceras,
   sedes,
   onEditar,
-  onEliminar,
   onAgregar,
   busqueda,
   onBusquedaCambio,
@@ -31,51 +28,6 @@ const TablaSedes = ({
   onCambioPagina,
   onCambioFilasPorPagina,
 }) => {
-  const confirmarEliminacion = (sede) => {
-    Swal.fire({
-      title: "¿Estás seguro?",
-      html: `¿Desea eliminar la sede <strong>${sede.nombre}</strong>?`,
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonColor: "#3085d6",
-      cancelButtonColor: "#d33",
-      confirmButtonText: "Sí, eliminar",
-      cancelButtonText: "Cancelar",
-    }).then((result) => {
-      if (result.isConfirmed) {
-        Swal.fire({
-          title: "Confirmar eliminación",
-          html: "Ingrese la siguiente palabra: <strong>ELIMINAR</strong>",
-          input: "text",
-          inputAttributes: {
-            autocapitalize: "off",
-          },
-          showCancelButton: true,
-          confirmButtonText: "Confirmar",
-          cancelButtonText: "Cancelar",
-          showLoaderOnConfirm: true,
-          preConfirm: (palabra) => {
-            if (palabra !== "ELIMINAR") {
-              Swal.showValidationMessage(
-                "Debe escribir ELIMINAR para confirmar"
-              );
-            }
-            return palabra;
-          },
-        }).then((result) => {
-          if (result.isConfirmed) {
-            onEliminar(sede.id);
-            Swal.fire(
-              "¡Eliminado!",
-              "La sede ha sido eliminada correctamente.",
-              "success"
-            );
-          }
-        });
-      }
-    });
-  };
-
   const sedesPaginadas = sedes.slice(
     pagina * filasPerPagina,
     pagina * filasPerPagina + filasPerPagina
@@ -132,10 +84,7 @@ const TablaSedes = ({
             {sedesPaginadas.map((sede) => (
               <TableRow hover key={sede.id}>
                 {cabeceras.map((cabecera) => (
-                  <TableCell
-                    key={`${sede.id}-${cabecera.id}`}
-                    align="left"
-                  >
+                  <TableCell key={`${sede.id}-${cabecera.id}`} align="left">
                     {sede[cabecera.id]}
                   </TableCell>
                 ))}
@@ -143,13 +92,6 @@ const TablaSedes = ({
                   <Tooltip title="Editar">
                     <IconButton color="warning" onClick={() => onEditar(sede)}>
                       <EditIcon />
-                    </IconButton>
-                  </Tooltip>
-                  <Tooltip title="Eliminar">
-                    <IconButton color="error"
-                      onClick={() => confirmarEliminacion(sede)}
-                    >
-                      <DeleteIcon />
                     </IconButton>
                   </Tooltip>
                 </TableCell>
