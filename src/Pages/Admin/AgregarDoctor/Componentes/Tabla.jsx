@@ -1,24 +1,26 @@
-import Paper from "@mui/material/Paper"
-import Table from "@mui/material/Table"
-import TableBody from "@mui/material/TableBody"
-import TableCell from "@mui/material/TableCell"
-import TableContainer from "@mui/material/TableContainer"
-import TableHead from "@mui/material/TableHead"
-import TableRow from "@mui/material/TableRow"
-import TablePagination from "@mui/material/TablePagination"
-import TextField from "@mui/material/TextField"
-import Button from "@mui/material/Button"
-import Box from "@mui/material/Box"
-import IconButton from "@mui/material/IconButton"
-import Tooltip from "@mui/material/Tooltip"
-import DeleteIcon from "@mui/icons-material/Delete"
-import EditIcon from "@mui/icons-material/Edit"
-import AddIcon from "@mui/icons-material/Add"
-import SearchIcon from "@mui/icons-material/Search"
-import InputAdornment from "@mui/material/InputAdornment"
-import Swal from "sweetalert2"
+import {
+  Paper,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TablePagination,
+  TableRow,
+  TextField,
+  IconButton,
+  Tooltip,
+  Box,
+  Button,
+  InputAdornment,
+} from "@mui/material";
+import EditIcon from "@mui/icons-material/Edit";
+import DeleteIcon from "@mui/icons-material/Delete";
+import AddIcon from "@mui/icons-material/Add";
+import SearchIcon from "@mui/icons-material/Search";
+import Swal from "sweetalert2";
 
-const Tabla = ({
+const TablaDoctores = ({
   cabeceras,
   doctores,
   onEditar,
@@ -31,43 +33,40 @@ const Tabla = ({
   onCambioPagina,
   onCambioFilasPorPagina,
 }) => {
-  const confirmarEliminacion = (registro) => {
+  const confirmarEliminacion = (doctor) => {
     Swal.fire({
-      title: "¿Estás seguro?",
-      html: `¿Desea eliminar al doctor <strong>${registro.nombre} ${registro.apellido}</strong>?`,
-      icon: "warning",
+      title: `¿Eliminar al doctor ${doctor.nombre} ${doctor.apellido}?`,
+      html: `Escriba <strong>ELIMINAR</strong> para confirmar`,
+      input: "text",
       showCancelButton: true,
-      confirmButtonColor: "#3085d6",
-      cancelButtonColor: "#d33",
-      confirmButtonText: "Sí, eliminar",
+      confirmButtonText: "Eliminar",
       cancelButtonText: "Cancelar",
-    }).then((result) => {
-      if (result.isConfirmed) {
-        onEliminar(registro.id)
-        Swal.fire("¡Eliminado!", "El doctor ha sido eliminado correctamente.", "success")
+      preConfirm: (input) => {
+        if (input !== "ELIMINAR") {
+          Swal.showValidationMessage("Debe escribir ELIMINAR para continuar");
+        }
+      },
+    }).then((res) => {
+      if (res.isConfirmed && res.value === "ELIMINAR") {
+        onEliminar(doctor.id);
+        Swal.fire("Eliminado", "El doctor ha sido eliminado", "success");
       }
-    })
-  }
+    });
+  };
 
-  const registrosPaginados = doctores.slice(pagina * filasPerPagina, pagina * filasPerPagina + filasPerPagina)
+  const paginados = doctores.slice(
+    pagina * filasPerPagina,
+    pagina * filasPerPagina + filasPerPagina
+  );
 
   return (
-    <Paper sx={{ width: "100%", overflow: "hidden", mb: 4 }}>
-      <Box
-        sx={{
-          p: 2,
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          gap: 2,
-        }}
-      >
+    <Paper sx={{ width: "100%", mb: 4 }}>
+      <Box sx={{ p: 2, display: "flex", justifyContent: "space-between" }}>
         <TextField
-          label="Buscar doctores"
-          variant="outlined"
           size="small"
           value={busqueda}
           onChange={onBusquedaCambio}
+          label="Buscar"
           InputProps={{
             startAdornment: (
               <InputAdornment position="start">
@@ -76,50 +75,54 @@ const Tabla = ({
             ),
           }}
         />
-        <Button variant="contained" color="primary" startIcon={<AddIcon />} onClick={onAgregar}>
-          Agregar Doctor
+        <Button variant="contained" startIcon={<AddIcon />} onClick={onAgregar}>
+          Agregar
         </Button>
       </Box>
       <TableContainer sx={{ maxHeight: 440 }}>
-        <Table stickyHeader aria-label="tabla de doctores">
+        <Table stickyHeader>
           <TableHead>
             <TableRow>
-              {cabeceras.map((cabecera) => (
-                <TableCell key={cabecera.id}>{cabecera.label}</TableCell>
+              {cabeceras.map((c) => (
+                <TableCell key={c.id}>{c.label}</TableCell>
               ))}
-              <TableCell align="center">Acciones</TableCell>
+              <TableCell>Acciones</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
-            {registrosPaginados.map((registro) => (
-              <TableRow hover key={registro.id}>
-                {cabeceras.map((cabecera) => (
-                  <TableCell key={`${registro.id}-${cabecera.id}`}>
-                    {cabecera.id === "estado"
-                      ? registro[cabecera.id] === 1
-                        ? "Activo"
-                        : "Inactivo"
-                      : registro[cabecera.id]}
+            {paginados.map((doctor) => (
+              <TableRow key={doctor.id} hover>
+                {cabeceras.map((c) => (
+                  <TableCell key={c.id}>
+                    {c.id === "especialidad"
+                      ? doctor.especialidad?.nombre || ""
+                      : doctor[c.id]}
                   </TableCell>
                 ))}
-                <TableCell align="center">
+                <TableCell>
                   <Tooltip title="Editar">
-                    <IconButton color="warning" onClick={() => onEditar(registro)}>
+                    <IconButton
+                      onClick={() => onEditar(doctor)}
+                      color="primary"
+                    >
                       <EditIcon />
                     </IconButton>
                   </Tooltip>
                   <Tooltip title="Eliminar">
-                    <IconButton color="error" onClick={() => confirmarEliminacion(registro)}>
+                    <IconButton
+                      onClick={() => confirmarEliminacion(doctor)}
+                      color="error"
+                    >
                       <DeleteIcon />
                     </IconButton>
                   </Tooltip>
                 </TableCell>
               </TableRow>
             ))}
-            {registrosPaginados.length === 0 && (
+            {paginados.length === 0 && (
               <TableRow>
                 <TableCell colSpan={cabeceras.length + 1} align="center">
-                  No se encontraron doctores
+                  No hay resultados
                 </TableCell>
               </TableRow>
             )}
@@ -127,18 +130,16 @@ const Tabla = ({
         </Table>
       </TableContainer>
       <TablePagination
-        rowsPerPageOptions={[10, 20, 30]}
         component="div"
         count={doctores.length}
         rowsPerPage={filasPerPagina}
         page={pagina}
         onPageChange={onCambioPagina}
         onRowsPerPageChange={onCambioFilasPorPagina}
-        labelRowsPerPage="Filas por página:"
-        labelDisplayedRows={({ from, to, count }) => `${from}-${to} de ${count}`}
+        labelRowsPerPage="Filas por página"
       />
     </Paper>
-  )
-}
+  );
+};
 
-export default Tabla
+export default TablaDoctores;

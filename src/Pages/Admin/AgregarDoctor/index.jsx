@@ -1,102 +1,164 @@
-import { useState } from "react"
-import { ThemeProvider, createTheme } from "@mui/material/styles"
-import CssBaseline from "@mui/material/CssBaseline"
-import Container from "@mui/material/Container"
-import Typography from "@mui/material/Typography"
-import Box from "@mui/material/Box"
-import TablaDoctores from "./Componentes/Tabla"
-import ModalFormulario from "./Componentes/Modal"
-import { doctoresIniciales, especialidades } from "./data"
+import { useState, useEffect } from "react";
+import { ThemeProvider, createTheme } from "@mui/material/styles";
+import CssBaseline from "@mui/material/CssBaseline";
+import Container from "@mui/material/Container";
+import Typography from "@mui/material/Typography";
+import Box from "@mui/material/Box";
+import CircularProgress from "@mui/material/CircularProgress";
+import Alert from "@mui/material/Alert";
+import TablaDoctores from "./Componentes/Tabla";
+import ModalFormulario from "./Componentes/Modal";
+import {
+  obtenerDoctores,
+  crearDoctor,
+  actualizarDoctor,
+  eliminarDoctor,
+} from "./data";
+import { obtenerEspecialidades } from "./dataEspecialidad"; // Asegúrate de tener esto
 
 const cabeceras = [
-  { id: "nombre", label: "Nombre" },
-  { id: "apellido", label: "Apellido" },
+  { id: "nombres", label: "Nombre" },
+  { id: "apellidos", label: "Apellido" },
   { id: "dni", label: "DNI" },
   { id: "cmp", label: "CMP" },
   { id: "correo", label: "Correo Electrónico" },
   { id: "celular", label: "Celular" },
   { id: "especialidad", label: "Especialidad" },
   { id: "estado", label: "Estado" },
-]
+];
 
 const theme = createTheme({
   palette: {
     primary: { main: "#1976d2" },
     secondary: { main: "#dc004e" },
   },
-})
+});
 
 function CrudDoctores() {
-  const [doctores, setDoctores] = useState(doctoresIniciales)
-  const [modalAbierto, setModalAbierto] = useState(false)
-  const [doctorEditando, setDoctorEditando] = useState(null)
-  const [busqueda, setBusqueda] = useState("")
-  const [filasPerPagina, setFilasPorPagina] = useState(10)
-  const [pagina, setPagina] = useState(0)
+  const [doctores, setDoctores] = useState([]);
+  const [especialidades, setEspecialidades] = useState([]);
+  const [modalAbierto, setModalAbierto] = useState(false);
+  const [doctorEditando, setDoctorEditando] = useState(null);
+  const [busqueda, setBusqueda] = useState("");
+  const [filasPerPagina, setFilasPerPagina] = useState(10);
+  const [pagina, setPagina] = useState(0);
+  const [cargando, setCargando] = useState(true);
+  const [error, setError] = useState(null);
+  const [guardando, setGuardando] = useState(false);
+
+  useEffect(() => {
+    cargarDatos();
+  }, []);
+
+  const cargarDatos = async () => {
+    try {
+      setCargando(true);
+      setError(null);
+      const [docs, especialidadesAPI] = await Promise.all([
+        obtenerDoctores(),
+        obtenerEspecialidades(),
+      ]);
+      setDoctores(docs);
+      setEspecialidades(especialidadesAPI);
+    } catch (err) {
+      setError(err.message || "Error al cargar los datos.");
+    } finally {
+      setCargando(false);
+    }
+  };
 
   const abrirModal = () => {
-    setDoctorEditando(null)
-    setModalAbierto(true)
-  }
+    setDoctorEditando(null);
+    setModalAbierto(true);
+  };
 
   const cerrarModal = () => {
-    setModalAbierto(false)
-    setDoctorEditando(null)
-  }
+    setModalAbierto(false);
+    setDoctorEditando(null);
+  };
 
   const editarDoctor = (doctor) => {
-    setDoctorEditando(doctor)
-    setModalAbierto(true)
-  }
+    setDoctorEditando(doctor);
+    setModalAbierto(true);
+  };
 
-  const guardarDoctor = (doctor) => {
-    if (doctor.id) {
-      // Editando - mantener la especialidad original
-      const doctorActualizado = {
-        ...doctor,
-        idEspecialidad: doctorEditando.idEspecialidad,
-        especialidad: doctorEditando.especialidad,
+  const guardarDoctor = async (doctor) => {
+    try {
+      setGuardando(true);
+      setError(null);
+      if (doctor.id) {
+        const actualizado = await actualizarDoctor(doctor.id, doctor);
+        setDoctores(
+          doctores.map((d) => (d.id === doctor.id ? actualizado : d))
+        );
+      } else {
+        const nuevo = await crearDoctor(doctor);
+        setDoctores([...doctores, nuevo]);
       }
-      setDoctores(doctores.map((d) => (d.id === doctor.id ? doctorActualizado : d)))
-    } else {
-      // Agregando nuevo doctor
-      const especialidadSeleccionada = especialidades.find((esp) => esp.id === doctor.idEspecialidad)
-      const nuevo = {
-        ...doctor,
-        id: Date.now().toString(),
-        especialidad: especialidadSeleccionada?.nombre || "",
-      }
-      setDoctores([...doctores, nuevo])
+      cerrarModal();
+    } catch (error) {
+      setError("Error al guardar doctor: " + error.message);
+    } finally {
+      setGuardando(false);
     }
-    cerrarModal()
-  }
+  };
 
-  const eliminarDoctor = (id) => {
-    setDoctores(doctores.filter((d) => d.id !== id))
-  }
+  const eliminarDoctorLocal = async (id) => {
+    try {
+      await eliminarDoctor(id);
+      setDoctores(doctores.filter((d) => d.id !== id));
+    } catch (error) {
+      setError("Error al eliminar doctor: " + error.message);
+    }
+  };
 
   const manejarBusqueda = (e) => {
-    setBusqueda(e.target.value)
-    setPagina(0)
-  }
+    setBusqueda(e.target.value);
+    setPagina(0);
+  };
 
   const manejarCambioPagina = (e, nuevaPagina) => {
-    setPagina(nuevaPagina)
-  }
+    setPagina(nuevaPagina);
+  };
 
-  const manejarFilasPorPagina = (e) => {
-    setFilasPorPagina(Number.parseInt(e.target.value, 10))
-    setPagina(0)
-  }
+  const manejarCambioFilas = (e) => {
+    setFilasPerPagina(parseInt(e.target.value, 10));
+    setPagina(0);
+  };
 
   const doctoresFiltrados = doctores.filter((d) => {
-    const t = busqueda.toLowerCase()
+    const t = busqueda.toLowerCase();
     return (
-      d.nombre.toLowerCase().includes(t) ||
-      d.apellido.toLowerCase().includes(t) ||
-      d.especialidad.toLowerCase().includes(t)
-    )
-  })
+      d.nombres.toLowerCase().includes(t) ||
+      d.apellidos.toLowerCase().includes(t) ||
+      d.dni.toLowerCase().includes(t) ||
+      d.cmp.toLowerCase().includes(t) ||
+      d.correo.toLowerCase().includes(t) ||
+      d.celular.toLowerCase().includes(t) ||
+      d.estado.toLowerCase().includes(t) ||
+      d.especialidad?.nombre?.toLowerCase().includes(t)
+    );
+  });
+
+  if (cargando) {
+    return (
+      <ThemeProvider theme={theme}>
+        <CssBaseline />
+        <Container maxWidth="lg">
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              minHeight: "50vh",
+            }}
+          >
+            <CircularProgress size={60} />
+          </Box>
+        </Container>
+      </ThemeProvider>
+    );
+  }
 
   return (
     <ThemeProvider theme={theme}>
@@ -106,31 +168,44 @@ function CrudDoctores() {
           <Typography variant="h4" align="center" gutterBottom>
             Gestión de Doctores
           </Typography>
+
+          {error && (
+            <Alert
+              severity="error"
+              onClose={() => setError(null)}
+              sx={{ mb: 2 }}
+            >
+              {error}
+            </Alert>
+          )}
+
           <TablaDoctores
             cabeceras={cabeceras}
             doctores={doctoresFiltrados}
             onEditar={editarDoctor}
-            onEliminar={eliminarDoctor}
+            onEliminar={eliminarDoctorLocal}
             onAgregar={abrirModal}
             busqueda={busqueda}
             onBusquedaCambio={manejarBusqueda}
             pagina={pagina}
             filasPerPagina={filasPerPagina}
             onCambioPagina={manejarCambioPagina}
-            onCambioFilasPorPagina={manejarFilasPorPagina}
+            onCambioFilasPorPagina={manejarCambioFilas}
           />
+
           <ModalFormulario
             abierto={modalAbierto}
             onCerrar={cerrarModal}
             onGuardar={guardarDoctor}
-            registro={doctorEditando} // ✅ Corregido: era "especialidad"
+            registro={doctorEditando}
             cabeceras={cabeceras}
-            especialidades={especialidades} // ✅ Agregado
+            especialidades={especialidades}
+            guardando={guardando}
           />
         </Box>
       </Container>
     </ThemeProvider>
-  )
+  );
 }
 
-export default CrudDoctores
+export default CrudDoctores;
