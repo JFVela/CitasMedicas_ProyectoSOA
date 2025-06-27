@@ -5,25 +5,66 @@ import DialogTitle from "@mui/material/DialogTitle";
 import Button from "@mui/material/Button";
 import TextField from "@mui/material/TextField";
 import MenuItem from "@mui/material/MenuItem";
-import { DialogActions, DialogContent } from "@mui/material";
+import { DialogActions, DialogContent, CircularProgress } from "@mui/material";
+import { TimePicker } from "@mui/x-date-pickers/TimePicker";
+import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import dayjs from "dayjs";
 
-// Styled components
 const CampoFormulario = styled.div`
   width: 100%;
   display: flex;
 `;
 
-const ModalHorario = ({ abierto, onCerrar, onGuardar, horario, cabeceras }) => {
+const diasSemana = [
+  "Lunes",
+  "Martes",
+  "Miércoles",
+  "Jueves",
+  "Viernes",
+  "Sábado",
+  "Domingo",
+];
+
+const convertirHora24 = (timeObj) => {
+  if (!dayjs.isDayjs(timeObj)) return "";
+  return timeObj.format("HH:mm:00"); // segundos fijos en "00"
+};
+
+const parsearHora = (horaStr) => {
+  if (!horaStr) return null;
+  const [hora, minuto] = horaStr.split(":");
+  return dayjs().hour(+hora).minute(+minuto).second(0);
+};
+
+const ModalHorario = ({
+  abierto,
+  onCerrar,
+  onGuardar,
+  horario,
+  cabeceras,
+  guardando = false,
+}) => {
   const [formulario, setFormulario] = useState({});
   const [errores, setErrores] = useState({});
 
   useEffect(() => {
     if (horario) {
-      setFormulario({ ...horario });
+      setFormulario({
+        ...horario,
+        dia_semana: horario.diaSemana || "",
+        hora_inicio: parsearHora(horario.horaInicio),
+        hora_fin: parsearHora(horario.horaFin),
+        estado: horario.estado || "Activo",
+      });
     } else {
       const nuevoFormulario = {};
       cabeceras.forEach((cabecera) => {
-        nuevoFormulario[cabecera.id] = "";
+        if (cabecera.id === "estado") {
+          nuevoFormulario[cabecera.id] = "Activo";
+        } else {
+          nuevoFormulario[cabecera.id] = "";
+        }
       });
       setFormulario(nuevoFormulario);
     }
@@ -36,7 +77,6 @@ const ModalHorario = ({ abierto, onCerrar, onGuardar, horario, cabeceras }) => {
       ...formulario,
       [name]: value,
     });
-
     if (errores[name]) {
       setErrores({
         ...errores,
@@ -45,27 +85,48 @@ const ModalHorario = ({ abierto, onCerrar, onGuardar, horario, cabeceras }) => {
     }
   };
 
+  const manejarHora = (name, value) => {
+    const hora = value ? value.second(0) : null;
+    setFormulario({
+      ...formulario,
+      [name]: hora,
+    });
+    if (errores[name]) {
+      setErrores({ ...errores, [name]: "" });
+    }
+  };
+
   const validarFormulario = () => {
     const nuevosErrores = {};
     let esValido = true;
 
-    // Validación de campos vacíos (excepto día de semana si ya tiene ID)
-    cabeceras.forEach((cabecera) => {
-      const valor = formulario[cabecera.id];
-      if (
-        (cabecera.id !== "dia_semana" || !formulario.id) && // solo valida día si es nuevo
-        (!valor || valor.toString().trim() === "")
-      ) {
-        nuevosErrores[cabecera.id] = `El campo ${cabecera.label} es requerido`;
-        esValido = false;
-      }
-    });
+    if (!formulario.dia_semana || formulario.dia_semana.trim() === "") {
+      nuevosErrores.dia_semana = "El campo Día de la Semana es requerido";
+      esValido = false;
+    }
 
-    // Validación de hora_inicio < hora_fin
-    const [hIni, hFin] = [formulario.hora_inicio, formulario.hora_fin];
-    if (hIni && hFin && hIni >= hFin) {
+    if (!formulario.hora_inicio) {
+      nuevosErrores.hora_inicio = "La hora de inicio es requerida";
+      esValido = false;
+    }
+
+    if (!formulario.hora_fin) {
+      nuevosErrores.hora_fin = "La hora de fin es requerida";
+      esValido = false;
+    }
+
+    if (
+      formulario.hora_inicio &&
+      formulario.hora_fin &&
+      formulario.hora_inicio.isAfter(formulario.hora_fin)
+    ) {
       nuevosErrores.hora_fin =
         "La hora final debe ser mayor que la hora de inicio";
+      esValido = false;
+    }
+
+    if (!formulario.estado) {
+      nuevosErrores.estado = "El campo Estado es requerido";
       esValido = false;
     }
 
@@ -76,14 +137,20 @@ const ModalHorario = ({ abierto, onCerrar, onGuardar, horario, cabeceras }) => {
   const manejarEnvio = (e) => {
     e.preventDefault();
     if (validarFormulario()) {
-      onGuardar(formulario);
+      const datosParaGuardar = {
+        ...formulario,
+        diaSemana: formulario.dia_semana,
+        horaInicio: convertirHora24(formulario.hora_inicio),
+        horaFin: convertirHora24(formulario.hora_fin),
+      };
+      onGuardar(datosParaGuardar);
     }
   };
 
   return (
     <Dialog
       open={abierto}
-      onClose={onCerrar}
+      onClose={!guardando ? onCerrar : undefined}
       fullWidth
       maxWidth="sm"
       disableEnforceFocus
@@ -94,73 +161,98 @@ const ModalHorario = ({ abierto, onCerrar, onGuardar, horario, cabeceras }) => {
       <form onSubmit={manejarEnvio}>
         <DialogContent
           dividers
-          sx={{
-            display: "flex",
-            flexDirection: "column",
-            gap: 2,
-            width: "100%",
-          }}
+          sx={{ display: "flex", flexDirection: "column", gap: 2 }}
         >
-          {cabeceras.map((cabecera) => (
-            <CampoFormulario key={cabecera.id}>
-              {cabecera.id === "dia_semana" ? (
-                <TextField
-                  fullWidth
-                  label={cabecera.label}
-                  name={cabecera.id}
-                  value={formulario[cabecera.id] || ""}
-                  InputProps={{
-                    readOnly: !!formulario.id, // si tiene ID, es edición
-                  }}
-                  helperText={
-                    formulario.id
-                      ? "No se puede modificar el día de la semana"
-                      : ""
-                  }
-                  onChange={manejarCambio}
-                  error={!!errores[cabecera.id]}
-                  disabled
-                />
-              ) : cabecera.id === "hora_inicio" ||
-                cabecera.id === "hora_fin" ? (
-                <TextField
-                  fullWidth
-                  label={cabecera.label}
-                  name={cabecera.id}
-                  type="time"
-                  value={formulario[cabecera.id] || ""}
-                  onChange={manejarCambio}
-                  error={!!errores[cabecera.id]}
-                  helperText={errores[cabecera.id] || ""}
-                  variant="outlined"
-                  InputLabelProps={{ shrink: true }}
-                  inputProps={{ step: 300 }} // 5 min
-                />
-              ) : cabecera.id === "estado" ? (
-                <TextField
-                  select
-                  fullWidth
-                  label={cabecera.label}
-                  name={cabecera.id}
-                  value={formulario[cabecera.id] || ""}
-                  onChange={manejarCambio}
-                  error={!!errores[cabecera.id]}
-                  helperText={errores[cabecera.id] || ""}
-                  variant="outlined"
-                >
-                  <MenuItem value="Activo">Activo</MenuItem>
-                  <MenuItem value="Inactivo">Inactivo</MenuItem>
-                </TextField>
-              ) : null}
-            </CampoFormulario>
-          ))}
+          <CampoFormulario>
+            <TextField
+              select
+              fullWidth
+              label="Día de la Semana"
+              name="dia_semana"
+              value={formulario.dia_semana || ""}
+              onChange={manejarCambio}
+              error={!!errores.dia_semana}
+              helperText={errores.dia_semana || ""}
+              disabled={guardando}
+            >
+              {diasSemana.map((dia) => (
+                <MenuItem key={dia} value={dia}>
+                  {dia}
+                </MenuItem>
+              ))}
+            </TextField>
+          </CampoFormulario>
+
+          <CampoFormulario>
+            <LocalizationProvider dateAdapter={AdapterDayjs}>
+              <TimePicker
+                ampm
+                label="Hora de Inicio"
+                value={formulario.hora_inicio || null}
+                onChange={(newValue) => manejarHora("hora_inicio", newValue)}
+                slotProps={{
+                  textField: {
+                    fullWidth: true,
+                    error: !!errores.hora_inicio,
+                    helperText: errores.hora_inicio,
+                  },
+                }}
+              />
+            </LocalizationProvider>
+          </CampoFormulario>
+
+          <CampoFormulario>
+            <LocalizationProvider dateAdapter={AdapterDayjs}>
+              <TimePicker
+                ampm
+                label="Hora de Fin"
+                value={formulario.hora_fin || null}
+                onChange={(newValue) => manejarHora("hora_fin", newValue)}
+                slotProps={{
+                  textField: {
+                    fullWidth: true,
+                    error: !!errores.hora_fin,
+                    helperText: errores.hora_fin,
+                  },
+                }}
+              />
+            </LocalizationProvider>
+          </CampoFormulario>
+
+          <CampoFormulario>
+            <TextField
+              select
+              fullWidth
+              label="Estado"
+              name="estado"
+              value={formulario.estado || ""}
+              onChange={manejarCambio}
+              error={!!errores.estado}
+              helperText={errores.estado || ""}
+              disabled={guardando}
+            >
+              <MenuItem value={"Activo"}>Activo</MenuItem>
+              <MenuItem value={"Inactivo"}>Inactivo</MenuItem>
+            </TextField>
+          </CampoFormulario>
         </DialogContent>
+
         <DialogActions sx={{ px: 3, pb: 2 }}>
-          <Button onClick={onCerrar} color="secondary">
+          <Button onClick={onCerrar} color="secondary" disabled={guardando}>
             Cancelar
           </Button>
-          <Button type="submit" color="primary" variant="contained">
-            {horario?.id ? "Actualizar" : "Guardar"}
+          <Button
+            type="submit"
+            color="primary"
+            variant="contained"
+            disabled={guardando}
+            startIcon={guardando ? <CircularProgress size={20} /> : null}
+          >
+            {guardando
+              ? "Guardando..."
+              : horario?.id
+              ? "Actualizar"
+              : "Guardar"}
           </Button>
         </DialogActions>
       </form>
