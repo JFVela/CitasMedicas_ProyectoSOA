@@ -19,6 +19,7 @@ import CrudSede from "./Pages/Admin/GestionSede";
 import CrudHorario from "./Pages/Admin/GestionHorario";
 import CrudDisponibilidad from "./Pages/Admin/GestionDisponibilidad";
 import CrudCita from "./Pages/Admin/GestionCitas";
+import CrudHistorial from "./Pages/Admin/GestionHistorial";
 
 // Página de Error 404
 import Error404 from "./Pages/Error404";
@@ -47,6 +48,7 @@ function AppRoutes() {
         <Route path="gestionHorario" element={<CrudHorario />} />
         <Route path="gestionDisponibilidad" element={<CrudDisponibilidad />} />
         <Route path="gestionCitas" element={<CrudCita />} />
+        <Route path="gestionHistorial" element={<CrudHistorial />} />
       </Route>
 
       {/* Ruta para errores */}

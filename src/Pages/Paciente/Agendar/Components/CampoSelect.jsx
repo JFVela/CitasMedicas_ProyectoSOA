@@ -1,25 +1,39 @@
-import { FormControl, InputLabel, Select, MenuItem } from "@mui/material";
-import ErrorTexto from "./ErrorTexto";
+import { TextField, MenuItem, styled } from "@mui/material";
 
-export default function CampoSelect({
-  label,
-  name,
-  value,
-  opciones,
-  error,
-  onChange,
-}) {
+const StyledTextField = styled(TextField)(({ theme }) => ({
+  marginBottom: theme.spacing(2),
+  "& .MuiOutlinedInput-root": {
+    borderRadius: 12,
+    "&:hover fieldset": {
+      borderColor: theme.palette.primary.main,
+    },
+    "&.Mui-focused fieldset": {
+      borderColor: theme.palette.primary.main,
+    },
+  },
+  "& .MuiInputLabel-root.Mui-focused": {
+    color: theme.palette.primary.main,
+  },
+}));
+
+export default function CampoSelect({ opciones = [], error, ...props }) {
   return (
-    <FormControl fullWidth error={!!error} sx={{ mb: 2 }}>
-      <InputLabel>{label}</InputLabel>
-      <Select name={name} value={value} label={label} onChange={onChange}>
-        {opciones.map((op) => (
-          <MenuItem key={op} value={op}>
-            {op}
-          </MenuItem>
-        ))}
-      </Select>
-      {error && <ErrorTexto>{error}</ErrorTexto>}
-    </FormControl>
+    <StyledTextField
+      select
+      fullWidth
+      variant="outlined"
+      error={!!error}
+      helperText={error}
+      {...props}
+    >
+      <MenuItem value="">
+        <em>Seleccione una opción</em>
+      </MenuItem>
+      {opciones.map((opcion) => (
+        <MenuItem key={opcion.value} value={opcion.value}>
+          {opcion.label}
+        </MenuItem>
+      ))}
+    </StyledTextField>
   );
 }

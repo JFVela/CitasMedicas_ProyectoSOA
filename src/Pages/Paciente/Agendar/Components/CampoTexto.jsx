@@ -1,25 +1,29 @@
-import { Box, TextField } from "@mui/material";
+import { TextField, styled } from "@mui/material";
 
-export default function CampoTexto({
-  label,
-  name,
-  value,
-  error,
-  onChange,
-  ...rest
-}) {
+const StyledTextField = styled(TextField)(({ theme }) => ({
+  marginBottom: theme.spacing(2),
+  "& .MuiOutlinedInput-root": {
+    borderRadius: 12,
+    "&:hover fieldset": {
+      borderColor: theme.palette.primary.main,
+    },
+    "&.Mui-focused fieldset": {
+      borderColor: theme.palette.primary.main,
+    },
+  },
+  "& .MuiInputLabel-root.Mui-focused": {
+    color: theme.palette.primary.main,
+  },
+}));
+
+export default function CampoTexto({ error, ...props }) {
   return (
-    <Box sx={{ mb: 2 }}>
-      <TextField
-        label={label}
-        name={name}
-        value={value}
-        onChange={onChange}
-        fullWidth
-        error={!!error}
-        helperText={error}
-        {...rest}
-      />
-    </Box>
+    <StyledTextField
+      fullWidth
+      variant="outlined"
+      error={!!error}
+      helperText={error}
+      {...props}
+    />
   );
 }
