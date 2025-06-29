@@ -70,6 +70,12 @@ const tabs = [
     icon: <CheckCircleIcon />,
     path: "/admin/gestionDisponibilidad", // Ruta temporal
   },
+  {
+    label: "Citas",
+    value: "9",
+    icon: <AssignmentIcon />,
+    path: "/admin/gestionCitas", // Ruta temporal
+  }
 ];
 
 function PaginaBase() {
