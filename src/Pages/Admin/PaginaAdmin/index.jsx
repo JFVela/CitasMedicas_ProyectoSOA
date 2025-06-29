@@ -50,7 +50,7 @@ const tabs = [
     label: "Historial Clínico",
     value: "5",
     icon: <AssignmentIcon />,
-    path: "*", // Ruta temporal
+    path: "/admin/gestionHistorial", // Ruta temporal
   },
   {
     label: "Sedes",
