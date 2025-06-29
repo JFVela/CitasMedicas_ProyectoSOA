@@ -1,52 +1,116 @@
-// Doctores (similares al ejemplo)
-export const doctores = [
-  { id: "1", nombre: "Luis Salazar Torres" },
-  { id: "2", nombre: "María González Pérez" },
-];
+const API_BASE_URL =
+  (typeof process !== "undefined" && process.env.NEXT_PUBLIC_API_URL
+    ? process.env.NEXT_PUBLIC_API_URL.replace(/\/$/, "")
+    : "http://localhost:8091") + "/api/disponibilidades";
 
-// Sedes del hospital
-export const sedes = [
-  { id: "s1", nombre: "Sede Central" },
-  { id: "s2", nombre: "Sede Surco" },
-  { id: "s3", nombre: "Sede San Juan" },
-];
+// Mapear datos desde la API
+const mapearDesdeAPI = (dispAPI) => ({
+  id: dispAPI.idDispon.toString(),
+  doctor: {
+    id: dispAPI.doctor?.idDoctor?.toString() || "",
+    nombre: `${dispAPI.doctor?.nombres || ""} ${dispAPI.doctor?.apellidos || ""}`,
+  },
+  sede: {
+    id: dispAPI.sede?.idsede?.toString() || "",
+    nombre: dispAPI.sede?.nombre || "",
+  },
+  horario: {
+    id: dispAPI.horario?.idHorario?.toString() || "",
+    nombre: `${dispAPI.horario?.diaSemana} ${dispAPI.horario?.horaInicio?.slice(0, 5)} - ${dispAPI.horario?.horaFin?.slice(0, 5)}`
+  },
+  fechaInicio: dispAPI.fechaInicio,
+  fechaFin: dispAPI.fechaFin,
+  estado: dispAPI.estado === 1 ? "Activo" : "Inactivo"
+});
 
-// Horarios disponibles (ejemplo básico)
-export const horarios = [
-  { id: "h1", dia_semana: "Lunes" },
-  { id: "h2", dia_semana: "Martes" },
-  { id: "h3", dia_semana: "Miércoles" },
-  { id: "h4", dia_semana: "Jueves" },
-  { id: "h5", dia_semana: "Viernes" },
-];
+// Mapear datos al formato de la API
+const mapearHaciaAPI = (dispLocal) => ({
+  doctor: { idDoctor: parseInt(dispLocal.doctor.id) },
+  sede: { idsede: parseInt(dispLocal.sede.id) },
+  horario: { idHorario: parseInt(dispLocal.horario.id) },
+  fechaInicio: dispLocal.fechaInicio,
+  fechaFin: dispLocal.fechaFin,
+  estado: dispLocal.estado === "Activo" ? 1 : 0
+});
 
-// Disponibilidades
-export const disponibilidadInicial = [
-  {
-    idDisponibilidad: "d1",
-    id_doctor: "1",
-    id_sede: "s1",
-    id_horario: "h1",
-    fecha_inicio: "2025-06-24",
-    fecha_fin: "2025-06-28",
-    estado: 1,
-  },
-  {
-    idDisponibilidad: "d2",
-    id_doctor: "2",
-    id_sede: "s2",
-    id_horario: "h3",
-    fecha_inicio: "2025-06-25",
-    fecha_fin: "2025-07-01",
-    estado: 1,
-  },
-  {
-    idDisponibilidad: "d3",
-    id_doctor: "1",
-    id_sede: "s3",
-    id_horario: "h5",
-    fecha_inicio: "2025-07-01",
-    fecha_fin: "2025-07-05",
-    estado: 0,
-  },
-];
+// Obtener todas las disponibilidades
+export const obtenerDisponibilidades = async () => {
+  try {
+    const response = await fetch(API_BASE_URL, { mode: "cors" });
+    if (!response.ok) {
+      throw new Error(`Error ${response.status}: ${response.statusText}`);
+    }
+    const data = await response.json();
+    return data.map(mapearDesdeAPI);
+  } catch (error) {
+    console.error("Error al obtener disponibilidades:", error);
+    throw error;
+  }
+};
+
+// Crear nueva disponibilidad
+export const crearDisponibilidad = async (disponibilidad) => {
+  try {
+    const response = await fetch(API_BASE_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(mapearHaciaAPI(disponibilidad)),
+      mode: "cors"
+    });
+
+    if (!response.ok) {
+      throw new Error(`Error ${response.status}: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    return mapearDesdeAPI(data);
+  } catch (error) {
+    console.error("Error al crear disponibilidad:", error);
+    throw error;
+  }
+};
+
+// Editar disponibilidad existente
+export const editarDisponibilidad = async (id, disponibilidad) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/${id}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(mapearHaciaAPI(disponibilidad)),
+      mode: "cors"
+    });
+
+    if (!response.ok) {
+      throw new Error(`Error ${response.status}: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    return mapearDesdeAPI(data);
+  } catch (error) {
+    console.error("Error al editar disponibilidad:", error);
+    throw error;
+  }
+};
+
+// Eliminar disponibilidad
+export const eliminarDisponibilidad = async (id) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/${id}`, {
+      method: "DELETE",
+      mode: "cors"
+    });
+
+    if (!response.ok) {
+      throw new Error(`Error ${response.status}: ${response.statusText}`);
+    }
+
+    return true;
+  } catch (error) {
+    console.error("Error al eliminar disponibilidad:", error);
+    throw error;
+  }
+};

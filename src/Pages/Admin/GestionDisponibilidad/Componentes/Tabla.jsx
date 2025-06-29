@@ -11,6 +11,7 @@ import Button from "@mui/material/Button";
 import Box from "@mui/material/Box";
 import IconButton from "@mui/material/IconButton";
 import Tooltip from "@mui/material/Tooltip";
+import Chip from "@mui/material/Chip";
 import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
 import AddIcon from "@mui/icons-material/Add";
@@ -18,9 +19,9 @@ import SearchIcon from "@mui/icons-material/Search";
 import InputAdornment from "@mui/material/InputAdornment";
 import Swal from "sweetalert2";
 
-const TablaEspecialidades = ({
+const TablaDisponibilidad = ({
   cabeceras,
-  especialidades,
+  registros,
   onEditar,
   onEliminar,
   onAgregar,
@@ -31,10 +32,10 @@ const TablaEspecialidades = ({
   onCambioPagina,
   onCambioFilasPorPagina,
 }) => {
-  const confirmarEliminacion = (especialidad) => {
+  const confirmarEliminacion = (disponibilidad) => {
     Swal.fire({
       title: "¿Estás seguro?",
-      html: `¿Desea eliminar la especialidad <strong>${especialidad.especialidad}</strong>?`,
+      html: `¿Desea eliminar la disponibilidad del Dr. <strong>${disponibilidad.doctor.nombre}</strong> en <strong>${disponibilidad.sede.nombre}</strong>?`,
       icon: "warning",
       showCancelButton: true,
       confirmButtonColor: "#3085d6",
@@ -64,10 +65,10 @@ const TablaEspecialidades = ({
           },
         }).then((result) => {
           if (result.isConfirmed) {
-            onEliminar(especialidad.id);
+            onEliminar(disponibilidad.id);
             Swal.fire(
               "¡Eliminado!",
-              "La especialidad ha sido eliminada correctamente.",
+              "La disponibilidad ha sido eliminada correctamente.",
               "success"
             );
           }
@@ -76,7 +77,37 @@ const TablaEspecialidades = ({
     });
   };
 
-  const especialidadesPaginadas = especialidades.slice(
+  const formatearFecha = (fecha) => {
+    if (!fecha) return "";
+    const fechaObj = new Date(fecha + "T00:00:00");
+    return fechaObj.toLocaleDateString("es-ES");
+  };
+
+  const renderizarCelda = (disponibilidad, cabecera) => {
+    switch (cabecera.id) {
+      case "doctor":
+        return disponibilidad.doctor.nombre;
+      case "sede":
+        return disponibilidad.sede.nombre;
+      case "horario":
+        return disponibilidad.horario.nombre;
+      case "fechaInicio":
+      case "fechaFin":
+        return formatearFecha(disponibilidad[cabecera.id]);
+      case "estado":
+        return (
+          <Chip
+            label={disponibilidad.estado}
+            color={disponibilidad.estado === "Activo" ? "success" : "default"}
+            size="small"
+          />
+        );
+      default:
+        return disponibilidad[cabecera.id] || "";
+    }
+  };
+
+  const registrosPaginados = registros.slice(
     pagina * filasPerPagina,
     pagina * filasPerPagina + filasPerPagina
   );
@@ -93,7 +124,7 @@ const TablaEspecialidades = ({
         }}
       >
         <TextField
-          label="Buscar especialidades"
+          label="Buscar disponibilidades"
           variant="outlined"
           size="small"
           value={busqueda}
@@ -112,12 +143,11 @@ const TablaEspecialidades = ({
           startIcon={<AddIcon />}
           onClick={onAgregar}
         >
-          Agregar
+          Agregar Disponibilidad
         </Button>
       </Box>
-
       <TableContainer sx={{ maxHeight: 440 }}>
-        <Table stickyHeader aria-label="tabla de especialidades">
+        <Table stickyHeader aria-label="tabla de disponibilidades">
           <TableHead>
             <TableRow>
               {cabeceras.map((cabecera) => (
@@ -129,25 +159,29 @@ const TablaEspecialidades = ({
             </TableRow>
           </TableHead>
           <TableBody>
-            {especialidadesPaginadas.map((especialidad) => (
-              <TableRow hover key={especialidad.id}>
+            {registrosPaginados.map((disponibilidad) => (
+              <TableRow hover key={disponibilidad.id}>
                 {cabeceras.map((cabecera) => (
                   <TableCell
-                    key={`${especialidad.id}-${cabecera.id}`}
+                    key={`${disponibilidad.id}-${cabecera.id}`}
                     align="left"
                   >
-                    {especialidad[cabecera.id]}
+                    {renderizarCelda(disponibilidad, cabecera)}
                   </TableCell>
                 ))}
                 <TableCell align="center">
                   <Tooltip title="Editar">
-                    <IconButton color="warning" onClick={() => onEditar(especialidad)}>
-                      <EditIcon />  
+                    <IconButton
+                      color="warning"
+                      onClick={() => onEditar(disponibilidad)}
+                    >
+                      <EditIcon />
                     </IconButton>
                   </Tooltip>
                   <Tooltip title="Eliminar">
-                    <IconButton color="error"
-                      onClick={() => confirmarEliminacion(especialidad)}
+                    <IconButton
+                      color="error"
+                      onClick={() => confirmarEliminacion(disponibilidad)}
                     >
                       <DeleteIcon />
                     </IconButton>
@@ -155,21 +189,20 @@ const TablaEspecialidades = ({
                 </TableCell>
               </TableRow>
             ))}
-            {especialidadesPaginadas.length === 0 && (
+            {registrosPaginados.length === 0 && (
               <TableRow>
                 <TableCell colSpan={cabeceras.length + 1} align="center">
-                  No se encontraron especialidades
+                  No se encontraron disponibilidades
                 </TableCell>
               </TableRow>
             )}
           </TableBody>
         </Table>
       </TableContainer>
-
       <TablePagination
         rowsPerPageOptions={[10, 20, 30]}
         component="div"
-        count={especialidades.length}
+        count={registros.length}
         rowsPerPage={filasPerPagina}
         page={pagina}
         onPageChange={onCambioPagina}
@@ -183,4 +216,4 @@ const TablaEspecialidades = ({
   );
 };
 
-export default TablaEspecialidades;
+export default TablaDisponibilidad;
