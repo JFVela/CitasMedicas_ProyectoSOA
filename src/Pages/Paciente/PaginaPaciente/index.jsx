@@ -15,7 +15,6 @@ import Navegador from "../../../Components/NavTabs";
 import HomeIcon from "@mui/icons-material/Home";
 import EventAvailableIcon from "@mui/icons-material/EventAvailable";
 import LoginIcon from "@mui/icons-material/Login";
-import InfoIcon from "@mui/icons-material/Info";
 import LogoutIcon from "@mui/icons-material/Logout";
 import DescriptionIcon from "@mui/icons-material/Description";
 
@@ -78,17 +77,34 @@ function PaginaBasePaciente() {
 
   const tabs = usuario ? tabsPrivadas : tabsPublicas;
 
+  // ✅ Cargar Landbot inmediatamente al montar
+  useEffect(() => {
+    if (!window.myLandbot) {
+      const s = document.createElement("script");
+      s.type = "module";
+      s.async = true;
+      s.addEventListener("load", function () {
+        window.myLandbot = new window.Landbot.Livechat({
+          configUrl:
+            "https://storage.googleapis.com/landbot.online/v3/H-3021702-F5FKIW7POGMZLQS6/index.json",
+        });
+      });
+      s.src = "https://cdn.landbot.io/landbot-3/landbot-3.0.0.mjs";
+      document.body.appendChild(s);
+    }
+  }, []);
+
+  // ✅ Control de sesión por inactividad
   useEffect(() => {
     setMounted(true);
 
     const intervalo = setInterval(() => {
       if (usuario && Date.now() - ultimaActividad > 30 * 60 * 1000) {
-        // 30 minutos de inactividad
         setUsuario(null);
         navigate("/paciente");
         alert("Sesión cerrada por inactividad");
       }
-    }, 60 * 1000); // Verificar cada minuto
+    }, 60 * 1000);
 
     const actualizarActividad = () => setUltimaActividad(Date.now());
     window.addEventListener("click", actualizarActividad);
@@ -115,7 +131,7 @@ function PaginaBasePaciente() {
     }
   };
 
-  // Simular autenticación simple
+  // ✅ Simular autenticación desde /login
   useEffect(() => {
     if (location.pathname === "/paciente/login") {
       const credenciales = prompt(
