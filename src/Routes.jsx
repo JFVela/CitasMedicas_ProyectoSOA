@@ -8,7 +8,8 @@ import Login from "./Pages/Paciente/Login";
 
 // Doctor
 import PaginaDoctor from "./Pages/Doctor/PaginaDoctor";
-import VerCitas from "./Pages/Doctor/VerCitas";
+import InicioDoctor from "./Pages/Doctor/Inicio";
+import Pacientes from "./Pages/Doctor/Pacientes";
 
 // Admin
 import PaginaAdmin from "./Pages/Admin/PaginaAdmin";
@@ -32,11 +33,15 @@ function AppRoutes() {
         <Route index element={<Inicio />} />
         <Route path="agendar" element={<Agendar />} />
         <Route path="login" element={<Login />} />
+        <Route path="*" element={<Error404 />} />
       </Route>
 
       {/* Rutas del Doctor */}
       <Route path="/doctor" element={<PaginaDoctor />}>
-        <Route path="ver-citas" element={<VerCitas />} />
+        <Route index element={<InicioDoctor />} />
+        <Route path="pacientes" element={<Pacientes />} />
+
+        <Route path="*" element={<Error404 />} />
       </Route>
 
       {/* Rutas del Admin */}
@@ -49,6 +54,7 @@ function AppRoutes() {
         <Route path="gestionDisponibilidad" element={<CrudDisponibilidad />} />
         <Route path="gestionCitas" element={<CrudCita />} />
         <Route path="gestionHistorial" element={<CrudHistorial />} />
+        <Route path="*" element={<Error404 />} />
       </Route>
 
       {/* Ruta para errores */}
