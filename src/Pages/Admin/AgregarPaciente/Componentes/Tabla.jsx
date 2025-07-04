@@ -92,7 +92,7 @@ const TablaPacientes = ({
                 <TableCell align="center">
                   <Tooltip title="Editar">
                     <IconButton
-                      color="warning"
+                      color="error"
                       onClick={() => onEditar(paciente)}
                     >
                       <EditIcon />

@@ -9,15 +9,15 @@ import Alert from "@mui/material/Alert";
 
 import TablaPacientes from "./Componentes/Tabla";
 import ModalFormularioPaciente from "./Componentes/Modal";
+import Alerta from "../../../Components/Alerta";
 
 import {
   obtenerPacientes,
   crearPaciente,
   actualizarPaciente,
-  // eliminarPaciente, // No usar según reglas
-} from "./data";
+  // eliminarPaciente,
+} from "../../../api/services/pacienteServices";
 
-// Cabeceras para la tabla de Pacientes
 const cabeceras = [
   { id: "nombres", label: "Nombres" },
   { id: "apellidos", label: "Apellidos" },
@@ -30,12 +30,8 @@ const cabeceras = [
 
 const theme = createTheme({
   palette: {
-    primary: {
-      main: "#1976d2",
-    },
-    secondary: {
-      main: "#dc004e",
-    },
+    primary: { main: "#1976d2" },
+    secondary: { main: "#dc004e" },
   },
 });
 
@@ -49,6 +45,7 @@ function CrudPaciente() {
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState(null);
   const [guardando, setGuardando] = useState(false);
+  const [alerta, setAlerta] = useState({ open: false });
 
   useEffect(() => {
     cargarPacientes();
@@ -77,6 +74,10 @@ function CrudPaciente() {
     setPacienteEditando(null);
   };
 
+  const cerrarAlerta = () => {
+    setAlerta({ open: false });
+  };
+
   const editarPaciente = (paciente) => {
     setPacienteEditando(paciente);
     setModalAbierto(true);
@@ -89,30 +90,40 @@ function CrudPaciente() {
 
       if (paciente.id) {
         const actualizado = await actualizarPaciente(paciente.id, paciente);
-        setPacientes(
-          pacientes.map((p) => (p.id === paciente.id ? actualizado : p))
+        setPacientes((prev) =>
+          prev.map((p) => (p.id === paciente.id ? actualizado : p))
         );
+
+        setAlerta({
+          open: true,
+          titulo: "Paciente Actualizado",
+          mensaje: `El paciente "${paciente.nombres} ${paciente.apellidos}" fue actualizado correctamente.`,
+          tipo: "success",
+        });
       } else {
         const nuevo = await crearPaciente(paciente);
-        setPacientes([...pacientes, nuevo]);
+        setPacientes((prev) => [...prev, nuevo]);
+
+        setAlerta({
+          open: true,
+          titulo: "Paciente Registrado",
+          mensaje: `El paciente "${paciente.nombres} ${paciente.apellidos}" fue registrado exitosamente.`,
+          tipo: "success",
+        });
       }
 
       cerrarModal();
     } catch (error) {
-      setError("Error al guardar paciente: " + error.message);
+      setAlerta({
+        open: true,
+        titulo: "Error",
+        mensaje: "No se pudo guardar el paciente. " + error.message,
+        tipo: "error",
+      });
     } finally {
       setGuardando(false);
     }
   };
-
-  // const manejarEliminarPaciente = async (id) => {
-  //   try {
-  //     await eliminarPaciente(id);
-  //     setPacientes(pacientes.filter((p) => p.id !== id));
-  //   } catch (error) {
-  //     setError("Error al eliminar paciente: " + error.message);
-  //   }
-  // };
 
   const manejarBusqueda = (e) => {
     setBusqueda(e.target.value.toLowerCase());
@@ -124,7 +135,7 @@ function CrudPaciente() {
   };
 
   const manejarCambioFilasPorPagina = (e) => {
-    setFilasPerPagina(Number.parseInt(e.target.value, 10));
+    setFilasPerPagina(parseInt(e.target.value, 10));
     setPagina(0);
   };
 
@@ -181,7 +192,6 @@ function CrudPaciente() {
             cabeceras={cabeceras}
             pacientes={pacientesFiltrados}
             onEditar={editarPaciente}
-            // onEliminar={manejarEliminarPaciente} // No usar según reglas
             onAgregar={abrirModal}
             busqueda={busqueda}
             onBusquedaCambio={manejarBusqueda}
@@ -198,6 +208,16 @@ function CrudPaciente() {
             paciente={pacienteEditando}
             cabeceras={cabeceras}
             guardando={guardando}
+          />
+
+          <Alerta
+            open={alerta.open}
+            onClose={cerrarAlerta}
+            titulo={alerta.titulo}
+            mensaje={alerta.mensaje}
+            tipo={alerta.tipo}
+            posicion={alerta.posicion}
+            timer={alerta.timer}
           />
         </Box>
       </Container>

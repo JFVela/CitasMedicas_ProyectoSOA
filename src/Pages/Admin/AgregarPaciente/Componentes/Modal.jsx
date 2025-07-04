@@ -8,7 +8,7 @@ import MenuItem from "@mui/material/MenuItem";
 import { DialogActions, DialogContent } from "@mui/material";
 import CircularProgress from "@mui/material/CircularProgress";
 
-// Contenedor general de los campos en dos columnas
+// Estilos
 const CamposContenedor = styled.div`
   display: flex;
   flex-wrap: wrap;
@@ -16,7 +16,6 @@ const CamposContenedor = styled.div`
   width: 100%;
 `;
 
-// Campo individual con tamaño flexible
 const CampoFormulario = styled.div`
   flex: 1 1 48%;
   min-width: 200px;
@@ -33,6 +32,8 @@ const ModalPaciente = ({
   const [formulario, setFormulario] = useState({});
   const [errores, setErrores] = useState({});
 
+  const esEdicion = Boolean(paciente?.id);
+
   useEffect(() => {
     if (paciente) {
       setFormulario({
@@ -45,7 +46,7 @@ const ModalPaciente = ({
       const nuevoFormulario = {};
       cabeceras.forEach((cabecera) => {
         if (cabecera.id === "estado") {
-          nuevoFormulario[cabecera.id] = "Activo"; // Activo por defecto
+          nuevoFormulario[cabecera.id] = "Activo";
         } else if (cabecera.id === "sexo") {
           nuevoFormulario[cabecera.id] = "M";
         } else {
@@ -57,9 +58,24 @@ const ModalPaciente = ({
     setErrores({});
   }, [paciente, cabeceras, abierto]);
 
+  const capitalizarTexto = (texto) => {
+    return texto
+      .toLowerCase()
+      .replace(/\b\w/g, (letra) => letra.toUpperCase())
+      .trim();
+  };
+
+  const contieneLetras = (texto) => /[a-zA-ZáéíóúÁÉÍÓÚñÑ]/.test(texto);
+
   const manejarCambio = (e) => {
     const { name, value } = e.target;
-    setFormulario({ ...formulario, [name]: value });
+    let nuevoValor = value;
+
+    if (name === "nombres" || name === "apellidos") {
+      nuevoValor = capitalizarTexto(nuevoValor.replace(/[0-9]/g, ""));
+    }
+
+    setFormulario({ ...formulario, [name]: nuevoValor });
 
     if (errores[name]) {
       setErrores({ ...errores, [name]: "" });
@@ -70,13 +86,13 @@ const ModalPaciente = ({
     const nuevosErrores = {};
     let esValido = true;
 
-    if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/.test(formulario.nombres || "")) {
-      nuevosErrores.nombres = "Solo letras permitidas";
+    if (!formulario.nombres || /\d/.test(formulario.nombres)) {
+      nuevosErrores.nombres = "Solo letras, sin números";
       esValido = false;
     }
 
-    if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/.test(formulario.apellidos || "")) {
-      nuevosErrores.apellidos = "Solo letras permitidas";
+    if (!formulario.apellidos || /\d/.test(formulario.apellidos)) {
+      nuevosErrores.apellidos = "Solo letras, sin números";
       esValido = false;
     }
 
@@ -95,8 +111,12 @@ const ModalPaciente = ({
       esValido = false;
     }
 
-    if (!formulario.direccion || formulario.direccion.length > 100) {
-      nuevosErrores.direccion = "Máximo 100 caracteres";
+    if (
+      !formulario.direccion ||
+      formulario.direccion.length > 100 ||
+      !contieneLetras(formulario.direccion)
+    ) {
+      nuevosErrores.direccion = "Debe incluir letras y máximo 100 caracteres";
       esValido = false;
     }
 
@@ -113,6 +133,7 @@ const ModalPaciente = ({
     e.preventDefault();
     if (validarFormulario()) {
       onGuardar(formulario);
+      onCerrar(); // ⬅️ Modal se cierra sí o sí si pasa validación
     }
   };
 
@@ -125,7 +146,7 @@ const ModalPaciente = ({
       disableEnforceFocus
     >
       <DialogTitle>
-        {paciente?.id ? "Actualizar Paciente" : "Agregar Paciente"}
+        {esEdicion ? "Actualizar Paciente" : "Agregar Paciente"}
       </DialogTitle>
 
       <form onSubmit={manejarEnvio}>
@@ -247,7 +268,7 @@ const ModalPaciente = ({
                 name="estado"
                 value={formulario.estado || "Activo"}
                 onChange={manejarCambio}
-                disabled={guardando}
+                disabled={!esEdicion || guardando} // ⬅️ Solo habilitado en edición
               >
                 <MenuItem value="Activo">Activo</MenuItem>
                 <MenuItem value="Inactivo">Inactivo</MenuItem>
@@ -267,11 +288,7 @@ const ModalPaciente = ({
             disabled={guardando}
             startIcon={guardando ? <CircularProgress size={20} /> : null}
           >
-            {guardando
-              ? "Guardando..."
-              : paciente?.id
-              ? "Actualizar"
-              : "Guardar"}
+            {guardando ? "Guardando..." : esEdicion ? "Actualizar" : "Guardar"}
           </Button>
         </DialogActions>
       </form>
