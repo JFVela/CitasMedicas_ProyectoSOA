@@ -4,6 +4,7 @@ export const API_ROUTES = {
   pacientes: "/pacientes",
   usuarios: "/usuarios",
   citas: "/citas",
+  sedes: "/sedes",
   disponibilidades: "/disponibilidades",
 };
 

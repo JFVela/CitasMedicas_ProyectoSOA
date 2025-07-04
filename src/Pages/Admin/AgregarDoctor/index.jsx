@@ -14,7 +14,7 @@ import {
   actualizarDoctor,
   eliminarDoctor,
 } from "../../../api/services/doctorServices";
-import { obtenerEspecialidades } from "./dataEspecialidad"; // Asegúrate de tener esto
+import { obtenerEspecialidades } from "../../../api/services/especialidadService"; // Asegúrate de tener esto
 
 const cabeceras = [
   { id: "nombres", label: "Nombre" },

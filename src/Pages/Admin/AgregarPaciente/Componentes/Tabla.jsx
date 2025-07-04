@@ -20,7 +20,6 @@ const TablaPacientes = ({
   cabeceras,
   pacientes,
   onEditar,
-  // onEliminar, // No se usa por reglas de negocio
   onAgregar,
   busqueda,
   onBusquedaCambio,
@@ -98,15 +97,6 @@ const TablaPacientes = ({
                       <EditIcon />
                     </IconButton>
                   </Tooltip>
-                  {/* Botón eliminar deshabilitado por reglas de negocio */}
-                  {/* <Tooltip title="Eliminar">
-                    <IconButton
-                      color="error"
-                      onClick={() => confirmarEliminacion(paciente)}
-                    >
-                      <DeleteIcon />
-                    </IconButton>
-                  </Tooltip> */}
                 </TableCell>
               </TableRow>
             ))}
