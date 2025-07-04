@@ -33,9 +33,23 @@ const TablaDoctores = ({
   onCambioPagina,
   onCambioFilasPorPagina,
 }) => {
+  // ✅ Función para mostrar correctamente cada valor en la celda:
+  const obtenerValorCelda = (doctor, campo) => {
+    if (campo === "especialidad") {
+      return doctor.especialidad?.nombre || "Sin Especialidad";
+    }
+    if (campo === "estado") {
+      return doctor.estado === 1 ? "Activo" : "Inactivo";
+    }
+    if (campo === "correo") {
+      return doctor.usuario?.correo || "No asignado";
+    }
+    return doctor[campo] ?? "";
+  };
+
   const confirmarEliminacion = (doctor) => {
     Swal.fire({
-      title: `¿Eliminar al doctor ${doctor.nombre} ${doctor.apellido}?`,
+      title: `¿Eliminar al doctor ${doctor.nombres} ${doctor.apellidos}?`,
       html: `Escriba <strong>ELIMINAR</strong> para confirmar`,
       input: "text",
       showCancelButton: true,
@@ -59,6 +73,8 @@ const TablaDoctores = ({
     pagina * filasPerPagina + filasPerPagina
   );
 
+  const cabecerasFiltradas = cabeceras.filter((c) => c.id !== "correo");
+
   return (
     <Paper sx={{ width: "100%", mb: 4 }}>
       <Box sx={{ p: 2, display: "flex", justifyContent: "space-between" }}>
@@ -79,24 +95,24 @@ const TablaDoctores = ({
           Agregar
         </Button>
       </Box>
+
       <TableContainer sx={{ maxHeight: 440 }}>
         <Table stickyHeader>
           <TableHead>
             <TableRow>
-              {cabeceras.map((c) => (
+              {cabecerasFiltradas.map((c) => (
                 <TableCell key={c.id}>{c.label}</TableCell>
               ))}
               <TableCell>Acciones</TableCell>
             </TableRow>
           </TableHead>
+
           <TableBody>
             {paginados.map((doctor) => (
               <TableRow key={doctor.id} hover>
-                {cabeceras.map((c) => (
+                {cabecerasFiltradas.map((c) => (
                   <TableCell key={c.id}>
-                    {c.id === "especialidad"
-                      ? doctor.especialidad?.nombre || ""
-                      : doctor[c.id]}
+                    {obtenerValorCelda(doctor, c.id)}
                   </TableCell>
                 ))}
                 <TableCell>
@@ -119,9 +135,13 @@ const TablaDoctores = ({
                 </TableCell>
               </TableRow>
             ))}
+
             {paginados.length === 0 && (
               <TableRow>
-                <TableCell colSpan={cabeceras.length + 1} align="center">
+                <TableCell
+                  colSpan={cabecerasFiltradas.length + 1}
+                  align="center"
+                >
                   No hay resultados
                 </TableCell>
               </TableRow>
@@ -129,6 +149,7 @@ const TablaDoctores = ({
           </TableBody>
         </Table>
       </TableContainer>
+
       <TablePagination
         component="div"
         count={doctores.length}

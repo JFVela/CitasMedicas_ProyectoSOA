@@ -8,9 +8,13 @@ import CircularProgress from "@mui/material/CircularProgress";
 import Alert from "@mui/material/Alert";
 import TablaSedes from "./Componentes/Tabla";
 import ModalFormularioSede from "./Componentes/Modal";
-import { obtenerSedes, crearSede, actualizarSede } from "./data"; // ahora se usa la API real
+import Alerta from "../../../Components/Alerta";
+import {
+  obtenerSedes,
+  crearSede,
+  actualizarSede,
+} from "../../../api/services/sedeServices";
 
-// Cabeceras para la tabla de Sedes
 const cabecerasSede = [
   { id: "nombre", label: "Nombre" },
   { id: "direccion", label: "Dirección" },
@@ -20,12 +24,8 @@ const cabecerasSede = [
 
 const theme = createTheme({
   palette: {
-    primary: {
-      main: "#1976d2",
-    },
-    secondary: {
-      main: "#dc004e",
-    },
+    primary: { main: "#1976d2" },
+    secondary: { main: "#dc004e" },
   },
 });
 
@@ -39,6 +39,7 @@ function CrudSede() {
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState(null);
   const [guardando, setGuardando] = useState(false);
+  const [alerta, setAlerta] = useState({ open: false });
 
   useEffect(() => {
     cargarSedes();
@@ -67,6 +68,10 @@ function CrudSede() {
     setSedeEditando(null);
   };
 
+  const cerrarAlerta = () => {
+    setAlerta({ open: false });
+  };
+
   const editarSede = (sede) => {
     setSedeEditando(sede);
     setModalAbierto(true);
@@ -79,15 +84,34 @@ function CrudSede() {
 
       if (sede.id) {
         const sedeActualizada = await actualizarSede(sede.id, sede);
-        setSedes(sedes.map((e) => (e.id === sede.id ? sedeActualizada : e)));
+        setSedes((prev) =>
+          prev.map((s) => (s.id === sede.id ? sedeActualizada : s))
+        );
+        setAlerta({
+          open: true,
+          titulo: "Sede Actualizada",
+          mensaje: `La sede "${sede.nombre}" fue actualizada correctamente.`,
+          tipo: "success",
+        });
       } else {
         const nuevaSede = await crearSede(sede);
-        setSedes([...sedes, nuevaSede]);
+        setSedes((prev) => [...prev, nuevaSede]);
+        setAlerta({
+          open: true,
+          titulo: "Sede Registrada",
+          mensaje: `La sede "${sede.nombre}" fue registrada exitosamente.`,
+          tipo: "success",
+        });
       }
 
       cerrarModal();
     } catch (error) {
-      setError("Error al guardar la sede: " + error.message);
+      setAlerta({
+        open: true,
+        titulo: "Error",
+        mensaje: "No se pudo guardar la sede. " + error.message,
+        tipo: "error",
+      });
     } finally {
       setGuardando(false);
     }
@@ -176,6 +200,16 @@ function CrudSede() {
             sede={sedeEditando}
             cabeceras={cabecerasSede}
             guardando={guardando}
+          />
+
+          <Alerta
+            open={alerta.open}
+            onClose={cerrarAlerta}
+            titulo={alerta.titulo}
+            mensaje={alerta.mensaje}
+            tipo={alerta.tipo}
+            posicion={alerta.posicion}
+            timer={alerta.timer}
           />
         </Box>
       </Container>

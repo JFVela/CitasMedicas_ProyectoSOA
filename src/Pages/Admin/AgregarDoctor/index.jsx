@@ -8,13 +8,15 @@ import CircularProgress from "@mui/material/CircularProgress";
 import Alert from "@mui/material/Alert";
 import TablaDoctores from "./Componentes/Tabla";
 import ModalFormulario from "./Componentes/Modal";
+
 import {
   obtenerDoctores,
-  crearDoctor,
+  crearDoctorConUsuario,
   actualizarDoctor,
   eliminarDoctor,
 } from "../../../api/services/doctorServices";
-import { obtenerEspecialidades } from "../../../api/services/especialidadService"; // Asegúrate de tener esto
+
+import { obtenerEspecialidades } from "../../../api/services/especialidadService";
 
 const cabeceras = [
   { id: "nombres", label: "Nombre" },
@@ -87,17 +89,21 @@ function CrudDoctores() {
       setGuardando(true);
       setError(null);
       if (doctor.id) {
+        // 👉 Actualizar sin usuario
         const actualizado = await actualizarDoctor(doctor.id, doctor);
         setDoctores(
           doctores.map((d) => (d.id === doctor.id ? actualizado : d))
         );
       } else {
-        const nuevo = await crearDoctor(doctor);
+        // 👉 Crear SIEMPRE con usuario
+        const nuevo = await crearDoctorConUsuario(doctor);
         setDoctores([...doctores, nuevo]);
       }
       cerrarModal();
     } catch (error) {
-      setError("Error al guardar doctor: " + error.message);
+      setError(
+        "Error al guardar doctor: " + (error.message || "Error desconocido.")
+      );
     } finally {
       setGuardando(false);
     }
@@ -108,7 +114,9 @@ function CrudDoctores() {
       await eliminarDoctor(id);
       setDoctores(doctores.filter((d) => d.id !== id));
     } catch (error) {
-      setError("Error al eliminar doctor: " + error.message);
+      setError(
+        "Error al eliminar doctor: " + (error.message || "Error desconocido.")
+      );
     }
   };
 
@@ -133,7 +141,7 @@ function CrudDoctores() {
       d.apellidos.toLowerCase().includes(t) ||
       d.dni.toLowerCase().includes(t) ||
       d.cmp.toLowerCase().includes(t) ||
-      d.correo.toLowerCase().includes(t) ||
+      d.usuario?.correo?.toLowerCase().includes(t) ||
       d.celular.toLowerCase().includes(t) ||
       d.estado.toLowerCase().includes(t) ||
       d.especialidad?.nombre?.toLowerCase().includes(t)

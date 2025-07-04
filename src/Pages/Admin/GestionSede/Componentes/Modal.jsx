@@ -13,6 +13,15 @@ const CampoFormulario = styled.div`
   display: flex;
 `;
 
+const capitalizarOracion = (texto) => {
+  return texto
+    .toLowerCase()
+    .split(" ")
+    .filter(Boolean)
+    .map((palabra) => palabra.charAt(0).toUpperCase() + palabra.slice(1))
+    .join(" ");
+};
+
 const ModalFormularioSede = ({
   abierto,
   onCerrar,
@@ -30,11 +39,7 @@ const ModalFormularioSede = ({
     } else {
       const nuevoFormulario = {};
       cabeceras.forEach((cabecera) => {
-        if (cabecera.id === "estado") {
-          nuevoFormulario[cabecera.id] = "Activo";
-        } else {
-          nuevoFormulario[cabecera.id] = "";
-        }
+        nuevoFormulario[cabecera.id] = cabecera.id === "estado" ? "Activo" : "";
       });
       setFormulario(nuevoFormulario);
     }
@@ -47,24 +52,39 @@ const ModalFormularioSede = ({
       ...formulario,
       [name]: value,
     });
-    if (errores[name]) {
-      setErrores({
-        ...errores,
-        [name]: "",
-      });
-    }
   };
 
   const validarFormulario = () => {
     const nuevosErrores = {};
     let esValido = true;
 
-    cabeceras.forEach((cabecera) => {
-      if (!formulario[cabecera.id] || formulario[cabecera.id].trim() === "") {
-        nuevosErrores[cabecera.id] = `El campo ${cabecera.label} es requerido`;
-        esValido = false;
-      }
-    });
+    const nombre = (formulario.nombre || "").trim();
+    const direccion = (formulario.direccion || "").trim();
+    const distrito = (formulario.distrito || "").trim();
+
+    if (!nombre) {
+      nuevosErrores.nombre = "El campo Nombre es requerido";
+      esValido = false;
+    } else if (/\d/.test(nombre)) {
+      nuevosErrores.nombre = "El Nombre no debe contener números";
+      esValido = false;
+    }
+
+    if (!direccion) {
+      nuevosErrores.direccion = "El campo Dirección es requerido";
+      esValido = false;
+    } else if (!/[a-zA-ZáéíóúÁÉÍÓÚñÑ]/.test(direccion)) {
+      nuevosErrores.direccion = "La Dirección debe contener al menos una letra";
+      esValido = false;
+    }
+
+    if (!distrito) {
+      nuevosErrores.distrito = "El campo Distrito es requerido";
+      esValido = false;
+    } else if (/\d/.test(distrito)) {
+      nuevosErrores.distrito = "El Distrito no debe contener números";
+      esValido = false;
+    }
 
     setErrores(nuevosErrores);
     return esValido;
@@ -72,8 +92,14 @@ const ModalFormularioSede = ({
 
   const manejarEnvio = (e) => {
     e.preventDefault();
+
+    const formateado = { ...formulario };
+    formateado.nombre = capitalizarOracion(formateado.nombre || "");
+    formateado.distrito = capitalizarOracion(formateado.distrito || "");
+    formateado.direccion = capitalizarOracion(formateado.direccion || "");
+
     if (validarFormulario()) {
-      onGuardar(formulario);
+      onGuardar(formateado);
     }
   };
 
@@ -106,10 +132,8 @@ const ModalFormularioSede = ({
                   name={cabecera.id}
                   value={formulario[cabecera.id] || ""}
                   onChange={manejarCambio}
-                  error={!!errores[cabecera.id]}
-                  helperText={errores[cabecera.id] || ""}
                   variant="outlined"
-                  disabled={guardando}
+                  disabled={!sede?.id || guardando} // solo habilitado al editar
                 >
                   <MenuItem value="Activo">Activo</MenuItem>
                   <MenuItem value="Inactivo">Inactivo</MenuItem>
@@ -121,12 +145,12 @@ const ModalFormularioSede = ({
                   name={cabecera.id}
                   value={formulario[cabecera.id] || ""}
                   onChange={manejarCambio}
-                  error={!!errores[cabecera.id]}
-                  helperText={errores[cabecera.id] || ""}
                   variant="outlined"
                   multiline={cabecera.id === "direccion"}
                   rows={cabecera.id === "direccion" ? 4 : 1}
                   disabled={guardando}
+                  error={!!errores[cabecera.id]}
+                  helperText={errores[cabecera.id] || ""}
                 />
               )}
             </CampoFormulario>

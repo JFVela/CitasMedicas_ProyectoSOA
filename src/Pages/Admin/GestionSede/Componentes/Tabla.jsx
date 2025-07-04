@@ -67,7 +67,6 @@ const TablaSedes = ({
           Agregar
         </Button>
       </Box>
-
       <TableContainer sx={{ maxHeight: 440 }}>
         <Table stickyHeader aria-label="tabla de sedes">
           <TableHead>
@@ -81,11 +80,14 @@ const TablaSedes = ({
             </TableRow>
           </TableHead>
           <TableBody>
-            {sedesPaginadas.map((sede) => (
-              <TableRow hover key={sede.id}>
+            {sedesPaginadas.map((sede, index) => (
+              <TableRow hover key={sede.id || `sede-${index}`}>
                 {cabeceras.map((cabecera) => (
-                  <TableCell key={`${sede.id}-${cabecera.id}`} align="left">
-                    {sede[cabecera.id]}
+                  <TableCell
+                    key={`${sede.id || index}-${cabecera.id}`}
+                    align="left"
+                  >
+                    {sede[cabecera.id] || ""}
                   </TableCell>
                 ))}
                 <TableCell align="center">
@@ -107,7 +109,6 @@ const TablaSedes = ({
           </TableBody>
         </Table>
       </TableContainer>
-
       <TablePagination
         rowsPerPageOptions={[10, 20, 30]}
         component="div"
