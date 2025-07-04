@@ -42,14 +42,11 @@ const mapearHaciaAPIRegistro = (doctorLocal) => ({
     cmp: doctorLocal.cmp,
     celular: doctorLocal.celular,
     estado: doctorLocal.estado === "Activo" ? 1 : 0,
-    especialidad: {
-        idespecialidad: parseInt(doctorLocal.especialidad.id, 10),
-    },
-    usuario: {
-        correo: doctorLocal.usuario?.correo || "",
-        contrasenia: doctorLocal.usuario?.contrasenia || "",
-        rol: doctorLocal.usuario?.rol || "3",  // por defecto
-    },
+    idEspecialidad: parseInt(doctorLocal.especialidad.id, 10),  // 🟢 backend espera este nombre exacto
+    email: doctorLocal.usuario?.correo || "",                   // 🟢 backend espera este nombre exacto
+    pass: doctorLocal.usuario?.contrasenia || "",               // 🟢 backend espera este nombre exacto
+    estadoDoctor: doctorLocal.estado === "Activo" ? 1 : 0,       // 🟢 backend espera este nombre exacto
+    rolId: 3,                                                    // 🟢 SIEMPRE 3 (id del rol)
 });
 
 // 👉 Obtener todos los doctores (GET /api/doctores)
@@ -66,9 +63,11 @@ export const crearDoctorSinUsuario = async (doctor) => {
 
 // 👉 Crear doctor con usuario (POST /api/doctores/registrar)
 export const crearDoctorConUsuario = async (doctor) => {
-    const response = await API.post(`${API_ROUTES.doctores}/registrar`, mapearHaciaAPIRegistro(doctor));
+    const data = mapearHaciaAPIRegistro(doctor);
+    const response = await API.post(`${API_ROUTES.doctores}/registrar`, data);
     return mapearDesdeAPI(response.data);
 };
+
 
 // 👉 Actualizar doctor (PUT /api/doctores/{id})
 export const actualizarDoctor = async (id, doctor) => {

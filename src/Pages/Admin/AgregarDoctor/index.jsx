@@ -8,22 +8,20 @@ import CircularProgress from "@mui/material/CircularProgress";
 import Alert from "@mui/material/Alert";
 import TablaDoctores from "./Componentes/Tabla";
 import ModalFormulario from "./Componentes/Modal";
-
 import {
   obtenerDoctores,
   crearDoctorConUsuario,
   actualizarDoctor,
   eliminarDoctor,
 } from "../../../api/services/doctorServices";
-
 import { obtenerEspecialidades } from "../../../api/services/especialidadService";
 
+// ✅ CORREGIDO: Removí "correo" de las cabeceras para evitar duplicación
 const cabeceras = [
   { id: "nombres", label: "Nombre" },
   { id: "apellidos", label: "Apellido" },
   { id: "dni", label: "DNI" },
   { id: "cmp", label: "CMP" },
-  { id: "correo", label: "Correo Electrónico" },
   { id: "celular", label: "Celular" },
   { id: "especialidad", label: "Especialidad" },
   { id: "estado", label: "Estado" },
@@ -88,14 +86,15 @@ function CrudDoctores() {
     try {
       setGuardando(true);
       setError(null);
+
       if (doctor.id) {
-        // 👉 Actualizar sin usuario
+        // Actualizar sin usuario
         const actualizado = await actualizarDoctor(doctor.id, doctor);
         setDoctores(
           doctores.map((d) => (d.id === doctor.id ? actualizado : d))
         );
       } else {
-        // 👉 Crear SIEMPRE con usuario
+        // Crear SIEMPRE con usuario
         const nuevo = await crearDoctorConUsuario(doctor);
         setDoctores([...doctores, nuevo]);
       }
@@ -130,7 +129,7 @@ function CrudDoctores() {
   };
 
   const manejarCambioFilas = (e) => {
-    setFilasPerPagina(parseInt(e.target.value, 10));
+    setFilasPerPagina(Number.parseInt(e.target.value, 10));
     setPagina(0);
   };
 
@@ -176,7 +175,6 @@ function CrudDoctores() {
           <Typography variant="h4" align="center" gutterBottom>
             Gestión de Doctores
           </Typography>
-
           {error && (
             <Alert
               severity="error"
@@ -186,7 +184,6 @@ function CrudDoctores() {
               {error}
             </Alert>
           )}
-
           <TablaDoctores
             cabeceras={cabeceras}
             doctores={doctoresFiltrados}
@@ -200,7 +197,6 @@ function CrudDoctores() {
             onCambioPagina={manejarCambioPagina}
             onCambioFilasPorPagina={manejarCambioFilas}
           />
-
           <ModalFormulario
             abierto={modalAbierto}
             onCerrar={cerrarModal}
