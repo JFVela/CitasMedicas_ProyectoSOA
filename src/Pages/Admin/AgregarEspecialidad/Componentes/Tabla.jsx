@@ -11,18 +11,15 @@ import Button from "@mui/material/Button";
 import Box from "@mui/material/Box";
 import IconButton from "@mui/material/IconButton";
 import Tooltip from "@mui/material/Tooltip";
-import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
 import AddIcon from "@mui/icons-material/Add";
 import SearchIcon from "@mui/icons-material/Search";
 import InputAdornment from "@mui/material/InputAdornment";
-import Swal from "sweetalert2";
 
 const TablaEspecialidades = ({
   cabeceras,
   especialidades,
   onEditar,
-  onEliminar,
   onAgregar,
   busqueda,
   onBusquedaCambio,
@@ -31,69 +28,6 @@ const TablaEspecialidades = ({
   onCambioPagina,
   onCambioFilasPorPagina,
 }) => {
-  const confirmarEliminacion = (especialidad) => {
-    Swal.fire({
-      title: "¿Estás seguro?",
-      html: `¿Desea eliminar la especialidad <strong>${especialidad.especialidad}</strong>?`,
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonColor: "#3085d6",
-      cancelButtonColor: "#d33",
-      confirmButtonText: "Sí, eliminar",
-      cancelButtonText: "Cancelar",
-    }).then((result) => {
-      if (result.isConfirmed) {
-        Swal.fire({
-          title: "Confirmar eliminación",
-          html: "Ingrese la siguiente palabra: <strong>ELIMINAR</strong>",
-          input: "text",
-          inputAttributes: {
-            autocapitalize: "off",
-          },
-          showCancelButton: true,
-          confirmButtonText: "Confirmar",
-          cancelButtonText: "Cancelar",
-          showLoaderOnConfirm: true,
-          preConfirm: (palabra) => {
-            if (palabra !== "ELIMINAR") {
-              Swal.showValidationMessage(
-                "Debe escribir ELIMINAR para confirmar"
-              );
-            }
-            return palabra;
-          },
-        }).then(async (result) => {
-          if (result.isConfirmed) {
-            try {
-              // Mostrar loading
-              Swal.fire({
-                title: "Eliminando...",
-                allowOutsideClick: false,
-                didOpen: () => {
-                  Swal.showLoading();
-                },
-              });
-
-              await onEliminar(especialidad.id);
-
-              Swal.fire(
-                "¡Eliminado!",
-                "La especialidad ha sido eliminada correctamente.",
-                "success"
-              );
-            } catch (error) {
-              Swal.fire(
-                "Error",
-                "No se pudo eliminar la especialidad. Inténtelo nuevamente.",
-                "error"
-              );
-            }
-          }
-        });
-      }
-    });
-  };
-
   const especialidadesPaginadas = especialidades.slice(
     pagina * filasPerPagina,
     pagina * filasPerPagina + filasPerPagina
@@ -163,14 +97,6 @@ const TablaEspecialidades = ({
                       onClick={() => onEditar(especialidad)}
                     >
                       <EditIcon />
-                    </IconButton>
-                  </Tooltip>
-                  <Tooltip title="Eliminar">
-                    <IconButton
-                      color="error"
-                      onClick={() => confirmarEliminacion(especialidad)}
-                    >
-                      <DeleteIcon />
                     </IconButton>
                   </Tooltip>
                 </TableCell>

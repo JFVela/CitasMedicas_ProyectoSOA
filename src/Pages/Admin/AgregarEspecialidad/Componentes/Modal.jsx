@@ -60,8 +60,17 @@ const ModalEspecialidad = ({
     let esValido = true;
 
     cabeceras.forEach((cabecera) => {
-      if (!formulario[cabecera.id] || formulario[cabecera.id].trim() === "") {
+      const valor = formulario[cabecera.id] || "";
+      if (!valor || valor.trim() === "") {
         nuevosErrores[cabecera.id] = `El campo ${cabecera.label} es requerido`;
+        esValido = false;
+      } else if (
+        (cabecera.id === "especialidad" || cabecera.id === "descripcion") &&
+        /\d/.test(valor)
+      ) {
+        nuevosErrores[
+          cabecera.id
+        ] = `El campo ${cabecera.label} no debe contener números`;
         esValido = false;
       }
     });
@@ -111,7 +120,7 @@ const ModalEspecialidad = ({
                   error={!!errores[cabecera.id]}
                   helperText={errores[cabecera.id] || ""}
                   variant="outlined"
-                  disabled={guardando}
+                  disabled={guardando || !especialidad?.id} // ⬅ Aquí está la clave: deshabilitado si no es edición
                 >
                   <MenuItem value="Activo">Activo</MenuItem>
                   <MenuItem value="Inactivo">Inactivo</MenuItem>

@@ -12,8 +12,8 @@ import {
   obtenerEspecialidades,
   crearEspecialidad,
   actualizarEspecialidad,
-  eliminarEspecialidad,
-} from "./data";
+  // eliminarEspecialidad, // Eliminado
+} from "../../../api/services/especialidadService";
 
 // Cabeceras para la tabla de Especialidades
 const cabeceras = [
@@ -107,15 +107,16 @@ function CrudEspecialidad() {
     }
   };
 
-  const manejarEliminarEspecialidad = async (id) => {
-    try {
-      setError(null);
-      await eliminarEspecialidad(id);
-      setEspecialidades(especialidades.filter((e) => e.id !== id));
-    } catch (error) {
-      setError("Error al eliminar la especialidad: " + error.message);
-    }
-  };
+  // Eliminar función y lógica de eliminar
+  // const manejarEliminarEspecialidad = async (id) => {
+  //   try {
+  //     setError(null);
+  //     await eliminarEspecialidad(id);
+  //     setEspecialidades(especialidades.filter((e) => e.id !== id));
+  //   } catch (error) {
+  //     setError("Error al eliminar la especialidad: " + error.message);
+  //   }
+  // };
 
   const manejarBusqueda = (evento) => {
     setBusqueda(evento.target.value);
@@ -183,7 +184,7 @@ function CrudEspecialidad() {
             cabeceras={cabeceras}
             especialidades={especialidadesFiltradas}
             onEditar={editarEspecialidad}
-            onEliminar={manejarEliminarEspecialidad}
+            // onEliminar={manejarEliminarEspecialidad} // Eliminado
             onAgregar={abrirModal}
             busqueda={busqueda}
             onBusquedaCambio={manejarBusqueda}
