@@ -18,8 +18,8 @@ import MedicalServicesIcon from "@mui/icons-material/MedicalServices"; // Especi
 import GroupIcon from "@mui/icons-material/Group"; // Pacientes
 import AssignmentIcon from "@mui/icons-material/Assignment"; // Historial clínico
 import DomainAddIcon from "@mui/icons-material/DomainAdd";
-import AccessTimeFilledIcon from '@mui/icons-material/AccessTimeFilled';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import AccessTimeFilledIcon from "@mui/icons-material/AccessTimeFilled";
+import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 
 const tabs = [
   {
@@ -47,12 +47,6 @@ const tabs = [
     path: "/admin/gestionPaciente", // Ruta temporal
   },
   {
-    label: "Historial Clínico",
-    value: "5",
-    icon: <AssignmentIcon />,
-    path: "/admin/gestionHistorial", // Ruta temporal
-  },
-  {
     label: "Sedes",
     value: "6",
     icon: <DomainAddIcon />,
@@ -75,7 +69,7 @@ const tabs = [
     value: "9",
     icon: <AssignmentIcon />,
     path: "/admin/gestionCitas", // Ruta temporal
-  }
+  },
 ];
 
 function PaginaBase() {

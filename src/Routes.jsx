@@ -55,7 +55,6 @@ function AppRoutes() {
         <Route path="gestionHorario" element={<CrudHorario />} />
         <Route path="gestionDisponibilidad" element={<CrudDisponibilidad />} />
         <Route path="gestionCitas" element={<CrudCita />} />
-        <Route path="gestionHistorial" element={<CrudHistorial />} />
         <Route path="*" element={<Error404 />} />
       </Route>
 

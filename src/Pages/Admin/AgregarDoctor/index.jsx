@@ -13,7 +13,7 @@ import {
   crearDoctor,
   actualizarDoctor,
   eliminarDoctor,
-} from "./data";
+} from "../../../api/services/doctorServices";
 import { obtenerEspecialidades } from "./dataEspecialidad"; // Asegúrate de tener esto
 
 const cabeceras = [

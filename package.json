@@ -17,6 +17,7 @@
     "@mui/material": "^7.1.1",
     "@mui/x-date-pickers": "^8.5.3",
     "@mui/x-date-pickers-pro": "^8.5.3",
+    "axios": "^1.10.0",
     "dayjs": "^1.11.13",
     "jspdf": "^3.0.1",
     "lucide-react": "^0.518.0",
