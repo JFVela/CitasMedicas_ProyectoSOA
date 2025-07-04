@@ -1,6 +1,6 @@
 function hola (){
     <div>
-        Hola
+        Holarterter
     </div>
 }
 export default hola;

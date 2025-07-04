@@ -10,6 +10,8 @@ import Login from "./Pages/Paciente/Login";
 import PaginaDoctor from "./Pages/Doctor/PaginaDoctor";
 import InicioDoctor from "./Pages/Doctor/Inicio";
 import Pacientes from "./Pages/Doctor/Pacientes";
+import HistorialClinico from "./Pages/Doctor/HistorialClinico";
+import CitasMedicas from "./Pages/Doctor/CitasMedicas";
 
 // Admin
 import InicioAdmin from "./Pages/Admin/Inicio";
@@ -21,7 +23,6 @@ import CrudSede from "./Pages/Admin/GestionSede";
 import CrudHorario from "./Pages/Admin/GestionHorario";
 import CrudDisponibilidad from "./Pages/Admin/GestionDisponibilidad";
 import CrudCita from "./Pages/Admin/GestionCitas";
-import CrudHistorial from "./Pages/Admin/GestionHistorial";
 
 // Página de Error 404
 import Error404 from "./Pages/Error404";
@@ -41,7 +42,8 @@ function AppRoutes() {
       <Route path="/doctor" element={<PaginaDoctor />}>
         <Route index element={<InicioDoctor />} />
         <Route path="pacientes" element={<Pacientes />} />
-
+        <Route path="citas-medicas" element={<CitasMedicas />} />
+        <Route path="historial-clinico" element={<HistorialClinico />} />
         <Route path="*" element={<Error404 />} />
       </Route>
 
