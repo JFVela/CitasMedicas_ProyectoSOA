@@ -5,12 +5,23 @@ import DialogTitle from "@mui/material/DialogTitle";
 import Button from "@mui/material/Button";
 import TextField from "@mui/material/TextField";
 import MenuItem from "@mui/material/MenuItem";
-import { DialogActions, DialogContent } from "@mui/material";
-import CircularProgress from "@mui/material/CircularProgress";
-import Typography from "@mui/material/Typography";
-import Divider from "@mui/material/Divider";
+import {
+  DialogActions,
+  DialogContent,
+  CircularProgress,
+  Typography,
+  Divider,
+} from "@mui/material";
 
-// Contenedor general de campos en 2 columnas
+// Styled Components
+const SeccionFormulario = styled.div`
+  margin-bottom: 24px;
+  padding: 20px;
+  border-radius: 12px;
+  background: #ffffff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+`;
+
 const ContenedorCampos = styled.div`
   display: flex;
   flex-wrap: wrap;
@@ -22,7 +33,6 @@ const ContenedorCampos = styled.div`
   }
 `;
 
-// Cada campo ocupará 48% en pantallas grandes y 100% en móviles
 const Campo = styled.div`
   flex: 1 1 48%;
   min-width: 200px;
@@ -32,27 +42,16 @@ const Campo = styled.div`
   }
 `;
 
-// Contenedor de cada sección con mejor padding y sombra ligera
-const SeccionFormulario = styled.div`
-  margin-bottom: 24px;
-  padding: 20px;
-  border-radius: 12px;
-  background: #ffffff;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+const CampoFormulario = styled.div`
+  width: 100%;
+  margin-bottom: 16px;
 `;
 
-// Botones centrados y con mejor espaciado
 const AccionesModal = styled.div`
   display: flex;
   justify-content: flex-end;
   gap: 12px;
   padding: 16px 24px;
-`;
-
-// Campo de usuario (ya existente pero lo estilizamos más suave)
-const CampoFormulario = styled.div`
-  width: 100%;
-  margin-bottom: 16px;
 `;
 
 const soloLetras = /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/;
@@ -101,7 +100,7 @@ const ModalFormulario = ({
         ...formulario,
         especialidad: { id: value, nombre: esp?.especialidad || "" },
       });
-    } else if (name === "usuario.correo" || name === "usuario.contrasenia") {
+    } else if (name.startsWith("usuario.")) {
       const campo = name.split(".")[1];
       setFormulario({
         ...formulario,
@@ -117,7 +116,6 @@ const ModalFormulario = ({
       });
     }
 
-    // Limpiar error del campo
     if (errores[name]) {
       setErrores({
         ...errores,
@@ -132,86 +130,57 @@ const ModalFormulario = ({
 
     cabeceras.forEach((c) => {
       const valor = formulario[c.id];
-      const campo = c.id;
 
-      // Validaciones específicas
-      if (campo === "nombres") {
-        if (!valor || valor.trim() === "") {
-          nuevosErrores[campo] = "El nombre es requerido";
-          esValido = false;
-        } else if (!soloLetras.test(valor.trim())) {
-          nuevosErrores[campo] = "Solo se permiten letras y espacios";
-          esValido = false;
-        }
+      if (c.id === "nombres" && (!valor || !soloLetras.test(valor.trim()))) {
+        nuevosErrores[c.id] = !valor ? "El nombre es requerido" : "Solo letras";
+        esValido = false;
       }
-      if (campo === "apellidos") {
-        if (!valor || valor.trim() === "") {
-          nuevosErrores[campo] = "El apellido es requerido";
-          esValido = false;
-        } else if (!soloLetras.test(valor.trim())) {
-          nuevosErrores[campo] = "Solo se permiten letras y espacios";
-          esValido = false;
-        }
+
+      if (c.id === "apellidos" && (!valor || !soloLetras.test(valor.trim()))) {
+        nuevosErrores[c.id] = !valor
+          ? "El apellido es requerido"
+          : "Solo letras";
+        esValido = false;
       }
-      if (campo === "dni") {
-        if (!valor || valor.trim() === "") {
-          nuevosErrores[campo] = "El DNI es requerido";
-          esValido = false;
-        } else if (!/^\d{8}$/.test(valor)) {
-          nuevosErrores[campo] = "El DNI debe tener 8 dígitos numéricos";
-          esValido = false;
-        }
+
+      if (c.id === "dni" && (!valor || !/^\d{8}$/.test(valor))) {
+        nuevosErrores[c.id] = "DNI inválido (8 dígitos)";
+        esValido = false;
       }
-      if (campo === "celular") {
-        if (!valor || valor.trim() === "") {
-          nuevosErrores[campo] = "El celular es requerido";
-          esValido = false;
-        } else if (!/^\d{9}$/.test(valor)) {
-          nuevosErrores[campo] = "El celular debe tener 9 dígitos numéricos";
-          esValido = false;
-        }
+
+      if (c.id === "celular" && (!valor || !/^\d{9}$/.test(valor))) {
+        nuevosErrores[c.id] = "Celular inválido (9 dígitos)";
+        esValido = false;
       }
-      if (campo === "cmp") {
-        if (!valor || valor.trim() === "") {
-          nuevosErrores[campo] = "El CMP es requerido";
-          esValido = false;
-        } else if (!soloNumeros.test(valor)) {
-          nuevosErrores[campo] = "El CMP debe ser numérico";
-          esValido = false;
-        }
+
+      if (c.id === "cmp" && (!valor || !soloNumeros.test(valor))) {
+        nuevosErrores[c.id] = "CMP inválido (solo números)";
+        esValido = false;
       }
-      if (campo === "especialidad") {
-        if (!valor?.id) {
-          nuevosErrores[campo] = "Selecciona una especialidad";
-          esValido = false;
-        }
+
+      if (c.id === "especialidad" && !valor?.id) {
+        nuevosErrores[c.id] = "Especialidad requerida";
+        esValido = false;
       }
-      // Estado no se valida en modo agregar, solo en editar
-      if (campo === "estado" && !esNuevo) {
-        if (!valor || (valor !== "Activo" && valor !== "Inactivo")) {
-          nuevosErrores[campo] = "Selecciona un estado válido";
-          esValido = false;
-        }
+
+      if (
+        c.id === "estado" &&
+        !esNuevo &&
+        (!valor || (valor !== "Activo" && valor !== "Inactivo"))
+      ) {
+        nuevosErrores[c.id] = "Estado inválido";
+        esValido = false;
       }
     });
 
-    // Validar campos de usuario solo para nuevos doctores
     if (esNuevo) {
       const { correo, contrasenia } = formulario.usuario || {};
-
-      if (!correo || correo.trim() === "") {
-        nuevosErrores["usuario.correo"] = "El correo es requerido";
-        esValido = false;
-      } else if (!correoValido.test(correo)) {
-        nuevosErrores["usuario.correo"] = "Correo electrónico inválido";
+      if (!correo || !correoValido.test(correo)) {
+        nuevosErrores["usuario.correo"] = "Correo inválido o requerido";
         esValido = false;
       }
-      if (!contrasenia || contrasenia.trim() === "") {
-        nuevosErrores["usuario.contrasenia"] = "La contraseña es requerida";
-        esValido = false;
-      } else if (contrasenia.length < 6) {
-        nuevosErrores["usuario.contrasenia"] =
-          "Contraseña mínima de 6 caracteres";
+      if (!contrasenia || contrasenia.length < 6) {
+        nuevosErrores["usuario.contrasenia"] = "Contraseña mínima 6 caracteres";
         esValido = false;
       }
     }
@@ -222,9 +191,7 @@ const ModalFormulario = ({
 
   const manejarEnvio = (e) => {
     e.preventDefault();
-    if (validarFormulario()) {
-      onGuardar(formulario);
-    }
+    if (validarFormulario()) onGuardar(formulario);
   };
 
   return (
@@ -240,89 +207,30 @@ const ModalFormulario = ({
       </DialogTitle>
 
       <form onSubmit={manejarEnvio}>
-        <DialogContent
-          dividers
-          sx={{
-            display: "flex",
-            flexDirection: "column",
-            gap: 2,
-            width: "100%",
-          }}
-        >
-          {/* SECCIÓN: Datos del Doctor */}
+        <DialogContent dividers>
           <SeccionFormulario>
             <Typography variant="h6" color="primary" gutterBottom>
               📋 Datos del Doctor
             </Typography>
             <Divider sx={{ mb: 2 }} />
 
-            <div style={{ display: "flex", flexWrap: "wrap", gap: "16px" }}>
+            <ContenedorCampos>
               {cabeceras.map((cabecera) => (
-                <div
-                  key={`doctor-field-${cabecera.id}`}
-                  style={{
-                    flex: "1 1 100%",
-                    maxWidth: "100%",
-                  }}
-                >
-                  <div
-                    style={{
-                      width: "100%",
-                      paddingRight: "8px",
-                      paddingLeft: "8px",
-                    }}
-                  >
-                    {cabecera.id === "estado" ? (
-                      esNuevo ? (
-                        <TextField
-                          fullWidth
-                          label={cabecera.label}
-                          value="Activo"
-                          variant="outlined"
-                          size="small"
-                          disabled
-                          helperText="El estado será 'Activo' al registrar"
-                        />
-                      ) : (
-                        <TextField
-                          select
-                          fullWidth
-                          label={cabecera.label}
-                          name={cabecera.id}
-                          value={formulario[cabecera.id] || ""}
-                          onChange={manejarCambio}
-                          error={!!errores[cabecera.id]}
-                          helperText={errores[cabecera.id] || ""}
-                          variant="outlined"
-                          size="small"
-                          disabled={guardando}
-                        >
-                          <MenuItem value="Activo">Activo</MenuItem>
-                          <MenuItem value="Inactivo">Inactivo</MenuItem>
-                        </TextField>
-                      )
-                    ) : cabecera.id === "especialidad" ? (
+                <Campo key={`campo-${cabecera.id}`}>
+                  {cabecera.id === "estado" ? (
+                    esNuevo ? (
                       <TextField
-                        select
                         fullWidth
                         label={cabecera.label}
-                        name={cabecera.id}
-                        value={formulario.especialidad?.id || ""}
-                        onChange={manejarCambio}
-                        error={!!errores[cabecera.id]}
-                        helperText={errores[cabecera.id] || ""}
+                        value="Activo"
                         variant="outlined"
                         size="small"
-                        disabled={guardando}
-                      >
-                        {especialidades.map((esp) => (
-                          <MenuItem key={`esp-${esp.id}`} value={esp.id}>
-                            {esp.especialidad}
-                          </MenuItem>
-                        ))}
-                      </TextField>
+                        disabled
+                        helperText="Estado será 'Activo'"
+                      />
                     ) : (
                       <TextField
+                        select
                         fullWidth
                         label={cabecera.label}
                         name={cabecera.id}
@@ -333,15 +241,50 @@ const ModalFormulario = ({
                         variant="outlined"
                         size="small"
                         disabled={guardando}
-                      />
-                    )}
-                  </div>
-                </div>
+                      >
+                        <MenuItem value="Activo">Activo</MenuItem>
+                        <MenuItem value="Inactivo">Inactivo</MenuItem>
+                      </TextField>
+                    )
+                  ) : cabecera.id === "especialidad" ? (
+                    <TextField
+                      select
+                      fullWidth
+                      label={cabecera.label}
+                      name={cabecera.id}
+                      value={formulario.especialidad?.id || ""}
+                      onChange={manejarCambio}
+                      error={!!errores[cabecera.id]}
+                      helperText={errores[cabecera.id] || ""}
+                      variant="outlined"
+                      size="small"
+                      disabled={guardando}
+                    >
+                      {especialidades.map((esp) => (
+                        <MenuItem key={`esp-${esp.id}`} value={esp.id}>
+                          {esp.especialidad}
+                        </MenuItem>
+                      ))}
+                    </TextField>
+                  ) : (
+                    <TextField
+                      fullWidth
+                      label={cabecera.label}
+                      name={cabecera.id}
+                      value={formulario[cabecera.id] || ""}
+                      onChange={manejarCambio}
+                      error={!!errores[cabecera.id]}
+                      helperText={errores[cabecera.id] || ""}
+                      variant="outlined"
+                      size="small"
+                      disabled={guardando}
+                    />
+                  )}
+                </Campo>
               ))}
-            </div>
+            </ContenedorCampos>
           </SeccionFormulario>
 
-          {/* SECCIÓN: Datos de Usuario (solo para nuevos) */}
           {esNuevo && (
             <SeccionFormulario>
               <Typography variant="h6" color="secondary" gutterBottom>
@@ -384,7 +327,7 @@ const ModalFormulario = ({
           )}
         </DialogContent>
 
-        <DialogActions sx={{ px: 3, pb: 2 }}>
+        <AccionesModal>
           <Button onClick={onCerrar} color="secondary" disabled={guardando}>
             Cancelar
           </Button>
@@ -397,7 +340,7 @@ const ModalFormulario = ({
           >
             {guardando ? "Guardando..." : registro ? "Actualizar" : "Registrar"}
           </Button>
-        </DialogActions>
+        </AccionesModal>
       </form>
     </Dialog>
   );
