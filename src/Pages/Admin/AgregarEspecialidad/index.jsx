@@ -12,10 +12,9 @@ import {
   obtenerEspecialidades,
   crearEspecialidad,
   actualizarEspecialidad,
-  // eliminarEspecialidad, // Eliminado
 } from "../../../api/services/especialidadService";
+import Alerta from "../../../Components/Alerta";
 
-// Cabeceras para la tabla de Especialidades
 const cabeceras = [
   { id: "especialidad", label: "Nombre de la Especialidad" },
   { id: "descripcion", label: "Descripción" },
@@ -24,12 +23,8 @@ const cabeceras = [
 
 const theme = createTheme({
   palette: {
-    primary: {
-      main: "#1976d2",
-    },
-    secondary: {
-      main: "#dc004e",
-    },
+    primary: { main: "#1976d2" },
+    secondary: { main: "#dc004e" },
   },
 });
 
@@ -43,8 +38,8 @@ function CrudEspecialidad() {
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState(null);
   const [guardando, setGuardando] = useState(false);
+  const [alerta, setAlerta] = useState({ open: false });
 
-  // Cargar especialidades al montar el componente
   useEffect(() => {
     cargarEspecialidades();
   }, []);
@@ -72,6 +67,10 @@ function CrudEspecialidad() {
     setEspecialidadEditando(null);
   };
 
+  const cerrarAlerta = () => {
+    setAlerta({ open: false });
+  };
+
   const editarEspecialidad = (especialidad) => {
     setEspecialidadEditando(especialidad);
     setModalAbierto(true);
@@ -80,43 +79,48 @@ function CrudEspecialidad() {
   const guardarEspecialidad = async (especialidad) => {
     try {
       setGuardando(true);
-      setError(null);
 
       if (especialidad.id) {
-        // Actualizar especialidad existente
         const especialidadActualizada = await actualizarEspecialidad(
           especialidad.id,
           especialidad
         );
-        setEspecialidades(
-          especialidades.map((e) =>
+        setEspecialidades((prev) =>
+          prev.map((e) =>
             e.id === especialidad.id ? especialidadActualizada : e
           )
         );
+
+        setAlerta({
+          open: true,
+          titulo: "Especialidad Actualizada",
+          mensaje: `La especialidad "${especialidad.especialidad}" fue actualizada correctamente.`,
+          tipo: "success",
+        });
       } else {
-        // Crear nueva especialidad
         const nuevaEspecialidad = await crearEspecialidad(especialidad);
-        setEspecialidades([...especialidades, nuevaEspecialidad]);
+        setEspecialidades((prev) => [...prev, nuevaEspecialidad]);
+
+        setAlerta({
+          open: true,
+          titulo: "Especialidad Creada",
+          mensaje: `La especialidad "${especialidad.especialidad}" fue registrada exitosamente.`,
+          tipo: "success",
+        });
       }
 
       cerrarModal();
     } catch (error) {
-      setError("Error al guardar la especialidad: " + error.message);
+      setAlerta({
+        open: true,
+        titulo: "Error",
+        mensaje: "No se pudo guardar la especialidad. " + error.message,
+        tipo: "error",
+      });
     } finally {
       setGuardando(false);
     }
   };
-
-  // Eliminar función y lógica de eliminar
-  // const manejarEliminarEspecialidad = async (id) => {
-  //   try {
-  //     setError(null);
-  //     await eliminarEspecialidad(id);
-  //     setEspecialidades(especialidades.filter((e) => e.id !== id));
-  //   } catch (error) {
-  //     setError("Error al eliminar la especialidad: " + error.message);
-  //   }
-  // };
 
   const manejarBusqueda = (evento) => {
     setBusqueda(evento.target.value);
@@ -128,7 +132,7 @@ function CrudEspecialidad() {
   };
 
   const manejarCambioFilasPorPagina = (evento) => {
-    setFilasPerPagina(Number.parseInt(evento.target.value, 10));
+    setFilasPerPagina(parseInt(evento.target.value, 10));
     setPagina(0);
   };
 
@@ -184,7 +188,6 @@ function CrudEspecialidad() {
             cabeceras={cabeceras}
             especialidades={especialidadesFiltradas}
             onEditar={editarEspecialidad}
-            // onEliminar={manejarEliminarEspecialidad} // Eliminado
             onAgregar={abrirModal}
             busqueda={busqueda}
             onBusquedaCambio={manejarBusqueda}
@@ -201,6 +204,16 @@ function CrudEspecialidad() {
             especialidad={especialidadEditando}
             cabeceras={cabeceras}
             guardando={guardando}
+          />
+
+          <Alerta
+            open={alerta.open}
+            onClose={cerrarAlerta}
+            titulo={alerta.titulo}
+            mensaje={alerta.mensaje}
+            tipo={alerta.tipo}
+            posicion={alerta.posicion}
+            timer={alerta.timer}
           />
         </Box>
       </Container>

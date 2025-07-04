@@ -93,7 +93,8 @@ const TablaEspecialidades = ({
                 <TableCell align="center">
                   <Tooltip title="Editar">
                     <IconButton
-                      color="warning"
+                      size="large"
+                      color="error"
                       onClick={() => onEditar(especialidad)}
                     >
                       <EditIcon />
