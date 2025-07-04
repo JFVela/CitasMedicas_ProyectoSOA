@@ -12,6 +12,7 @@ import InicioDoctor from "./Pages/Doctor/Inicio";
 import Pacientes from "./Pages/Doctor/Pacientes";
 
 // Admin
+import InicioAdmin from "./Pages/Admin/Inicio";
 import PaginaAdmin from "./Pages/Admin/PaginaAdmin";
 import AgregarDoctor from "./Pages/Admin/AgregarDoctor";
 import AgregarEspecialidad from "./Pages/Admin/AgregarEspecialidad";
@@ -46,6 +47,7 @@ function AppRoutes() {
 
       {/* Rutas del Admin */}
       <Route path="/admin" element={<PaginaAdmin />}>
+        <Route index element={<InicioAdmin />} />
         <Route path="gestionDoctor" element={<AgregarDoctor />} />
         <Route path="gestionEspecialidad" element={<AgregarEspecialidad />} />
         <Route path="gestionPaciente" element={<AgregarPaciente />} />

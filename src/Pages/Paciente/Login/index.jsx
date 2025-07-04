@@ -11,10 +11,11 @@ import {
 } from "@mui/material";
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 import { createTheme, ThemeProvider, styled } from "@mui/material/styles";
+import Swal from "sweetalert2";
+import { useNavigate } from "react-router-dom";
 
 const theme = createTheme();
 
-// Paper con estilos comunes
 const StyledPaper = styled(Paper)(({ theme }) => ({
   position: "absolute",
   width: "100%",
@@ -24,7 +25,6 @@ const StyledPaper = styled(Paper)(({ theme }) => ({
   backfaceVisibility: "hidden",
 }));
 
-// Form container: columna, items centrados y gap uniforme
 const FormContainer = styled(Box)(({ theme }) => ({
   marginTop: theme.spacing(3),
   display: "flex",
@@ -34,7 +34,6 @@ const FormContainer = styled(Box)(({ theme }) => ({
   width: "100%",
 }));
 
-// Footer link centrado
 const LinkBox = styled(Box)(() => ({
   marginTop: 8,
   textAlign: "center",
@@ -42,7 +41,37 @@ const LinkBox = styled(Box)(() => ({
 
 export default function LoginRegister() {
   const [modoRegistro, setModoRegistro] = useState(false);
+  const [usuario, setUsuario] = useState("");
+  const [password, setPassword] = useState("");
+  const navigate = useNavigate();
+
   const handleFlip = () => setModoRegistro((prev) => !prev);
+
+  // Usuarios hardcodeados
+  const usuarios = [
+    { username: "juan", password: "123456", rol: "doctor" },
+    { username: "alex", password: "123456", rol: "admin" },
+    { username: "maria", password: "admin123", rol: "admin" },
+  ];
+
+  const handleLogin = (e) => {
+    e.preventDefault();
+
+    const user = usuarios.find(
+      (u) => u.username === usuario && u.password === password
+    );
+
+    if (user) {
+      // Redirigir según el rol
+      navigate(`/${user.rol}`);
+    } else {
+      Swal.fire({
+        icon: "error",
+        title: "Credenciales incorrectas",
+        text: "Verifica tu usuario o contraseña",
+      });
+    }
+  };
 
   return (
     <ThemeProvider theme={theme}>
@@ -69,18 +98,22 @@ export default function LoginRegister() {
               <Typography variant="h5">Iniciar Sesión</Typography>
             </Box>
 
-            <FormContainer component="form">
+            <FormContainer component="form" onSubmit={handleLogin}>
               <TextField
                 label="Usuario"
                 fullWidth
                 required
                 autoFocus
+                value={usuario}
+                onChange={(e) => setUsuario(e.target.value)}
               />
               <TextField
                 label="Contraseña"
                 fullWidth
                 required
                 type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
               />
               <Button
                 type="submit"
@@ -103,7 +136,7 @@ export default function LoginRegister() {
             </LinkBox>
           </StyledPaper>
 
-          {/* ——— REGISTRO ——— */}
+          {/* ——— REGISTRO (decorativo por ahora) ——— */}
           <StyledPaper
             elevation={6}
             sx={{ transform: "rotateY(180deg)" }}
