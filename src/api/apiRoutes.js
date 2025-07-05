@@ -6,6 +6,7 @@ export const API_ROUTES = {
   citas: "/citas",
   sedes: "/sedes",
   disponibilidades: "/disponibilidades",
+  hmedicos: "/hmedicos",
 };
 
 export default API_ROUTES;

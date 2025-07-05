@@ -93,3 +93,19 @@ export const obtenerPacientesDelDoctor = async (idDoctor) => {
         fechaNacimiento: p.fechaNacimiento,
     }));
 };
+
+// 👉 Obtener todas las citas de los pacientes de un doctor (GET /api/doctores/{id}/pacientes-citas)
+export const obtenerPacientesConCitasDelDoctor = async (idDoctor) => {
+    const response = await API.get(`${API_ROUTES.doctores}/${idDoctor}/pacientes-citas`);
+    return response.data.map(item => ({
+        idCita: item.idCita || item.id, // Aseguramos que siempre haya un ID
+        idPaciente: item.idPaciente,
+        nombres: item.nombres,
+        apellidos: item.apellidos,
+        dni: item.dni,
+        celular: item.celular,
+        fechaCita: item.fechaCita,
+        motivoConsulta: item.motivoConsulta,
+        estadoCita: item.estadoCita,
+    }));
+};
