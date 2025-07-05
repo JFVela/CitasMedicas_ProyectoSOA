@@ -3,7 +3,7 @@ import { API_ROUTES } from "../apiRoutes";
 
 // Mapear datos desde la API al frontend
 const mapearDesdeAPI = (sedeAPI) => ({
-  id: sedeAPI.id_sede?.toString(),
+  id: sedeAPI.idsede,
   nombre: sedeAPI.nombre,
   direccion: sedeAPI.direccion,
   distrito: sedeAPI.distrito,
