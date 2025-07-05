@@ -1,5 +1,3 @@
-"use client";
-
 import { useState, useEffect } from "react";
 import { Box, Typography, Alert, CircularProgress } from "@mui/material";
 import { styled } from "@mui/material/styles";
@@ -85,7 +83,7 @@ const mapearHorarioHaciaAPI = (horarioLocal) => ({
   diaSemana: horarioLocal.dia,
   horaInicio: convertir12A24Horas(horarioLocal.horaInicio),
   horaFin: convertir12A24Horas(horarioLocal.horaFin),
-  estado: horarioLocal.activo ? "Activo" : "Inactivo",
+  estado: horarioLocal.activo ? "Activo" : "Inactivo", // ✅ Esto se convertirá a 1/0 en el service
 });
 
 export default function CalendarioHorarios() {
@@ -160,11 +158,14 @@ export default function CalendarioHorarios() {
         return false;
       }
 
-      // 🔄 Crear horario en la API
+      // 🔄 Crear horario en la API - ✅ Estado por defecto: Activo (1)
       const horarioParaAPI = mapearHorarioHaciaAPI({
         ...formulario,
-        activo: true,
+        activo: true, // ✅ Por defecto activo
       });
+
+      console.log("Enviando a API:", horarioParaAPI); // Para debugging
+
       const nuevoHorarioAPI = await crearHorario(horarioParaAPI);
       const nuevoHorario = mapearHorarioDesdeAPI(nuevoHorarioAPI);
 
@@ -191,8 +192,14 @@ export default function CalendarioHorarios() {
   };
 
   const abrirModalEdicion = (tarea) => {
-    setTareaEditando(tarea);
+    console.log("Abriendo modal para editar:", tarea); // Para debugging
+    setTareaEditando({ ...tarea }); // ✅ Crear copia para evitar mutación
     setModalAbierto(true);
+  };
+
+  const cerrarModal = () => {
+    setModalAbierto(false);
+    setTareaEditando(null); // ✅ Limpiar tarea editando
   };
 
   const guardarEdicion = async (tareaActualizada) => {
@@ -217,6 +224,8 @@ export default function CalendarioHorarios() {
 
       // 🔄 Actualizar horario en la API
       const horarioParaAPI = mapearHorarioHaciaAPI(tareaActualizada);
+      console.log("Actualizando en API:", horarioParaAPI); // Para debugging
+
       const horarioActualizadoAPI = await actualizarHorario(
         tareaActualizada.id,
         horarioParaAPI
@@ -228,8 +237,7 @@ export default function CalendarioHorarios() {
           t.id === tareaActualizada.id ? horarioActualizado : t
         )
       );
-      setModalAbierto(false);
-      setTareaEditando(null);
+      cerrarModal(); // ✅ Usar función que limpia todo
       setAlerta({
         mostrar: true,
         mensaje: "Horario actualizado exitosamente",
@@ -323,7 +331,7 @@ export default function CalendarioHorarios() {
       <ModalEdicion
         abierto={modalAbierto}
         tarea={tareaEditando}
-        onCerrar={() => setModalAbierto(false)}
+        onCerrar={cerrarModal}
         onGuardar={guardarEdicion}
       />
     </CalendarioContainer>

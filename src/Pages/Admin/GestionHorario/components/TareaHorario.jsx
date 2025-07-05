@@ -2,7 +2,9 @@ import { Box, Card, CardContent, Typography, Chip } from "@mui/material";
 import { styled } from "@mui/material/styles";
 import EditIcon from "@mui/icons-material/Edit";
 
-const TaskCard = styled(Card)(({ theme, activo }) => ({
+const TaskCard = styled(Card, {
+  shouldForwardProp: (prop) => prop !== "activo",
+})(({ theme, activo }) => ({
   margin: theme.spacing(0.5, 0),
   cursor: "pointer",
   backgroundColor: activo ? "#1976d2" : "#bdbdbd",

@@ -1,5 +1,4 @@
-
-import { useState, useEffect } from "react"
+import { useState, useEffect } from "react";
 import {
   Dialog,
   DialogTitle,
@@ -7,158 +6,192 @@ import {
   DialogActions,
   Button,
   Box,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
   FormControlLabel,
   Switch,
   CircularProgress,
-} from "@mui/material"
-import { convertirA24Horas } from "../index"
-
-// Generar horas del día en formato 12 horas
-const generarHoras = () => {
-  const horas = []
-  for (let h = 1; h <= 12; h++) {
-    for (let m = 0; m < 60; m += 30) {
-      const minutos = m.toString().padStart(2, "0")
-      horas.push(`${h}:${minutos} AM`)
-      if (h !== 12) horas.push(`${h}:${minutos} PM`)
-    }
-  }
-  horas.push("12:00 PM", "12:30 PM")
-  return horas.sort((a, b) => {
-    const timeA = convertirA24Horas(a)
-    const timeB = convertirA24Horas(b)
-    return timeA - timeB
-  })
-}
+} from "@mui/material";
+import { TimeField } from "@mui/x-date-pickers/TimeField";
+import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import dayjs from "dayjs";
 
 export default function ModalEdicion({ abierto, tarea, onCerrar, onGuardar }) {
-  const [tareaEditando, setTareaEditando] = useState(null)
-  const [errores, setErrores] = useState({})
-  const [guardando, setGuardando] = useState(false)
-
-  const horas = generarHoras()
+  const [tareaEditando, setTareaEditando] = useState(null);
+  const [errores, setErrores] = useState({});
+  const [guardando, setGuardando] = useState(false);
 
   useEffect(() => {
-    if (tarea) {
-      setTareaEditando({ ...tarea })
+    if (tarea && abierto) {
+      console.log("Cargando tarea en modal:", tarea); // Para debugging
+      // Convertir las horas de string a dayjs
+      const horaInicioDayjs = convertirHora12ADayjs(tarea.horaInicio);
+      const horaFinDayjs = convertirHora12ADayjs(tarea.horaFin);
+
+      setTareaEditando({
+        ...tarea,
+        horaInicio: horaInicioDayjs,
+        horaFin: horaFinDayjs,
+      });
     }
-    setErrores({})
-  }, [tarea])
+    setErrores({});
+  }, [tarea, abierto]);
+
+  const convertirHora12ADayjs = (hora12) => {
+    if (!hora12) return null;
+    try {
+      // Parsear hora en formato "8:00 AM" a dayjs
+      return dayjs(hora12, "h:mm A");
+    } catch (error) {
+      console.error("Error al convertir hora:", error);
+      return null;
+    }
+  };
+
+  const convertirDayjsAHora12 = (dayjsTime) => {
+    if (!dayjsTime || !dayjsTime.isValid()) return "";
+    return dayjsTime.format("h:mm A");
+  };
 
   const validarFormulario = () => {
-    if (!tareaEditando) return false
+    if (!tareaEditando) return false;
 
-    const nuevosErrores = {}
+    const nuevosErrores = {};
 
     if (tareaEditando.horaInicio && tareaEditando.horaFin) {
-      const inicioMinutos = convertirA24Horas(tareaEditando.horaInicio)
-      const finMinutos = convertirA24Horas(tareaEditando.horaFin)
+      const inicioMinutos =
+        tareaEditando.horaInicio.hour() * 60 +
+        tareaEditando.horaInicio.minute();
+      const finMinutos =
+        tareaEditando.horaFin.hour() * 60 + tareaEditando.horaFin.minute();
 
       if (inicioMinutos >= finMinutos) {
-        nuevosErrores.horaFin = "La hora de fin debe ser posterior a la de inicio"
+        nuevosErrores.horaFin =
+          "La hora de fin debe ser posterior a la de inicio";
       }
 
-      // Validación: no permitir horas iguales
       if (inicioMinutos === finMinutos) {
-        nuevosErrores.horaFin = "La hora de inicio y fin no pueden ser iguales"
+        nuevosErrores.horaFin = "La hora de inicio y fin no pueden ser iguales";
       }
     }
 
-    setErrores(nuevosErrores)
-    return Object.keys(nuevosErrores).length === 0
-  }
+    setErrores(nuevosErrores);
+    return Object.keys(nuevosErrores).length === 0;
+  };
 
   const manejarGuardar = async () => {
-    if (!validarFormulario()) return
+    if (!validarFormulario()) return;
 
     try {
-      setGuardando(true)
-      const exito = await onGuardar(tareaEditando)
+      setGuardando(true);
+
+      // Convertir de dayjs a formato 12 horas antes de enviar
+      const tareaParaEnviar = {
+        ...tareaEditando,
+        horaInicio: convertirDayjsAHora12(tareaEditando.horaInicio),
+        horaFin: convertirDayjsAHora12(tareaEditando.horaFin),
+      };
+
+      console.log("Tarea a actualizar:", tareaParaEnviar); // Para debugging
+
+      const exito = await onGuardar(tareaParaEnviar);
       if (exito !== false) {
-        // Solo cerrar si se guardó exitosamente
-        onCerrar()
+        // El modal se cerrará desde el componente padre
       }
     } catch (error) {
-      console.error("Error en modal:", error)
+      console.error("Error en modal:", error);
     } finally {
-      setGuardando(false)
+      setGuardando(false);
     }
-  }
+  };
 
-  if (!tareaEditando) return null
+  if (!tareaEditando) return null;
 
   return (
-    <Dialog open={abierto} onClose={!guardando ? onCerrar : undefined} maxWidth="sm" fullWidth>
-      <DialogTitle>Editar Horario</DialogTitle>
-      <DialogContent>
-        <Box sx={{ pt: 2 }}>
-          <Box sx={{ display: "flex", gap: 2, mb: 3 }}>
-            <FormControl fullWidth error={!!errores.horaInicio}>
-              <InputLabel>Hora Inicio</InputLabel>
-              <Select
-                value={tareaEditando.horaInicio}
-                onChange={(e) => setTareaEditando({ ...tareaEditando, horaInicio: e.target.value })}
+    <LocalizationProvider dateAdapter={AdapterDayjs}>
+      <Dialog
+        open={abierto}
+        onClose={!guardando ? onCerrar : undefined}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>Editar Horario - {tareaEditando.dia}</DialogTitle>
+        <DialogContent>
+          <Box sx={{ pt: 2 }}>
+            <Box sx={{ display: "flex", gap: 2, mb: 3 }}>
+              <TimeField
                 label="Hora Inicio"
+                value={tareaEditando.horaInicio}
+                onChange={(newValue) =>
+                  setTareaEditando({ ...tareaEditando, horaInicio: newValue })
+                }
+                format="h:mm A"
                 disabled={guardando}
-              >
-                {horas.map((hora) => (
-                  <MenuItem key={hora} value={hora}>
-                    {hora}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-
-            <FormControl fullWidth error={!!errores.horaFin}>
-              <InputLabel>Hora Fin</InputLabel>
-              <Select
-                value={tareaEditando.horaFin}
-                onChange={(e) => setTareaEditando({ ...tareaEditando, horaFin: e.target.value })}
-                label="Hora Fin"
-                disabled={guardando}
-              >
-                {horas.map((hora) => (
-                  <MenuItem key={hora} value={hora}>
-                    {hora}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          </Box>
-
-          {errores.horaFin && <Box sx={{ color: "error.main", fontSize: "0.75rem", mb: 2 }}>{errores.horaFin}</Box>}
-
-          <FormControlLabel
-            control={
-              <Switch
-                checked={tareaEditando.activo}
-                onChange={(e) => setTareaEditando({ ...tareaEditando, activo: e.target.checked })}
-                color="primary"
-                disabled={guardando}
+                slotProps={{
+                  textField: {
+                    error: !!errores.horaInicio,
+                    helperText: errores.horaInicio,
+                    fullWidth: true,
+                  },
+                }}
               />
-            }
-            label={`Estado: ${tareaEditando.activo ? "Activo" : "Inactivo"}`}
-          />
-        </Box>
-      </DialogContent>
-      <DialogActions>
-        <Button onClick={onCerrar} color="secondary" disabled={guardando}>
-          Cancelar
-        </Button>
-        <Button
-          onClick={manejarGuardar}
-          variant="contained"
-          color="primary"
-          disabled={guardando}
-          startIcon={guardando ? <CircularProgress size={20} /> : null}
-        >
-          {guardando ? "Guardando..." : "Guardar Cambios"}
-        </Button>
-      </DialogActions>
-    </Dialog>
-  )
+
+              <TimeField
+                label="Hora Fin"
+                value={tareaEditando.horaFin}
+                onChange={(newValue) =>
+                  setTareaEditando({ ...tareaEditando, horaFin: newValue })
+                }
+                format="h:mm A"
+                disabled={guardando}
+                slotProps={{
+                  textField: {
+                    error: !!errores.horaFin,
+                    helperText: errores.horaFin,
+                    fullWidth: true,
+                  },
+                }}
+              />
+            </Box>
+
+            {errores.horaFin && (
+              <Box sx={{ color: "error.main", fontSize: "0.75rem", mb: 2 }}>
+                {errores.horaFin}
+              </Box>
+            )}
+
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={tareaEditando.activo}
+                  onChange={(e) =>
+                    setTareaEditando({
+                      ...tareaEditando,
+                      activo: e.target.checked,
+                    })
+                  }
+                  color="primary"
+                  disabled={guardando}
+                />
+              }
+              label={`Estado: ${tareaEditando.activo ? "Activo" : "Inactivo"}`}
+            />
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={onCerrar} color="secondary" disabled={guardando}>
+            Cancelar
+          </Button>
+          <Button
+            onClick={manejarGuardar}
+            variant="contained"
+            color="primary"
+            disabled={guardando}
+            startIcon={guardando ? <CircularProgress size={20} /> : null}
+          >
+            {guardando ? "Guardando..." : "Guardar Cambios"}
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </LocalizationProvider>
+  );
 }
