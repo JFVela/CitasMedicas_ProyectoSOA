@@ -7,6 +7,7 @@ export const API_ROUTES = {
   sedes: "/sedes",
   disponibilidades: "/disponibilidades",
   hmedicos: "/hmedicos",
+  horarios: "/horarios",
 };
 
 export default API_ROUTES;
