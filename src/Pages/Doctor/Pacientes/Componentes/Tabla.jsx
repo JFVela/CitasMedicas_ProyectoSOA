@@ -7,21 +7,15 @@ import TableHead from "@mui/material/TableHead";
 import TableRow from "@mui/material/TableRow";
 import TablePagination from "@mui/material/TablePagination";
 import TextField from "@mui/material/TextField";
-import Button from "@mui/material/Button";
 import Box from "@mui/material/Box";
-import IconButton from "@mui/material/IconButton";
-import Tooltip from "@mui/material/Tooltip";
-import EditIcon from "@mui/icons-material/Edit";
-import AddIcon from "@mui/icons-material/Add";
 import SearchIcon from "@mui/icons-material/Search";
 import InputAdornment from "@mui/material/InputAdornment";
+import Chip from "@mui/material/Chip";
+import PersonIcon from "@mui/icons-material/Person";
 
 const TablaPacientes = ({
   cabeceras,
   pacientes,
-  onEditar,
-  // onEliminar, // No se usa por reglas de negocio
-  onAgregar,
   busqueda,
   onBusquedaCambio,
   pagina,
@@ -34,8 +28,39 @@ const TablaPacientes = ({
     pagina * filasPerPagina + filasPerPagina
   );
 
+  // ✅ Función para formatear la fecha de nacimiento
+  const formatearFecha = (fecha) => {
+    if (!fecha) return "N/A";
+    const fechaObj = new Date(fecha);
+    return fechaObj.toLocaleDateString("es-PE", {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    });
+  };
+
+  // ✅ Función para obtener el valor de la celda con formato
+  const obtenerValorCelda = (paciente, cabecera) => {
+    const valor = paciente[cabecera.id];
+
+    switch (cabecera.id) {
+      case "fechaNacimiento":
+        return formatearFecha(valor);
+      case "nombres":
+      case "apellidos":
+        return valor || "N/A";
+      case "dni":
+        return valor || "Sin DNI";
+      case "celular":
+        return valor || "Sin teléfono";
+      default:
+        return valor || "N/A";
+    }
+  };
+
   return (
     <Paper sx={{ width: "100%", overflow: "hidden", mb: 4 }}>
+      {/* ✅ Header simplificado - solo búsqueda */}
       <Box
         sx={{
           p: 2,
@@ -51,6 +76,7 @@ const TablaPacientes = ({
           size="small"
           value={busqueda}
           onChange={onBusquedaCambio}
+          sx={{ minWidth: 300 }}
           InputProps={{
             startAdornment: (
               <InputAdornment position="start">
@@ -59,61 +85,52 @@ const TablaPacientes = ({
             ),
           }}
         />
-        <Button
-          variant="contained"
+
+        {/* ✅ Chip con contador de pacientes */}
+        <Chip
+          icon={<PersonIcon />}
+          label={`${pacientes.length} paciente${
+            pacientes.length !== 1 ? "s" : ""
+          }`}
           color="primary"
-          startIcon={<AddIcon />}
-          onClick={onAgregar}
-        >
-          Agregar
-        </Button>
+          variant="outlined"
+        />
       </Box>
 
       <TableContainer sx={{ maxHeight: 440 }}>
-        <Table stickyHeader aria-label="tabla de pacientes">
+        <Table stickyHeader aria-label="tabla de pacientes del doctor">
           <TableHead>
             <TableRow>
               {cabeceras.map((cabecera) => (
-                <TableCell key={cabecera.id} align="left">
+                <TableCell key={`header-${cabecera.id}`} align="left">
                   {cabecera.label}
                 </TableCell>
               ))}
-              <TableCell align="center">Acciones</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
             {pacientesPaginados.map((paciente) => (
-              <TableRow hover key={paciente.id}>
+              <TableRow hover key={`paciente-${paciente.id}`}>
                 {cabeceras.map((cabecera) => (
-                  <TableCell key={`${paciente.id}-${cabecera.id}`} align="left">
-                    {paciente[cabecera.id]}
+                  <TableCell
+                    key={`cell-${paciente.id}-${cabecera.id}`}
+                    align="left"
+                  >
+                    {obtenerValorCelda(paciente, cabecera)}
                   </TableCell>
                 ))}
-                <TableCell align="center">
-                  <Tooltip title="Editar">
-                    <IconButton
-                      color="warning"
-                      onClick={() => onEditar(paciente)}
-                    >
-                      <EditIcon />
-                    </IconButton>
-                  </Tooltip>
-                  {/* Botón eliminar deshabilitado por reglas de negocio */}
-                  {/* <Tooltip title="Eliminar">
-                    <IconButton
-                      color="error"
-                      onClick={() => confirmarEliminacion(paciente)}
-                    >
-                      <DeleteIcon />
-                    </IconButton>
-                  </Tooltip> */}
-                </TableCell>
               </TableRow>
             ))}
             {pacientesPaginados.length === 0 && (
               <TableRow>
-                <TableCell colSpan={cabeceras.length + 1} align="center">
-                  No se encontraron pacientes
+                <TableCell
+                  colSpan={cabeceras.length}
+                  align="center"
+                  sx={{ py: 4 }}
+                >
+                  {busqueda
+                    ? "No se encontraron pacientes que coincidan con la búsqueda"
+                    : "Este doctor no tiene pacientes asignados"}
                 </TableCell>
               </TableRow>
             )}
@@ -122,7 +139,7 @@ const TablaPacientes = ({
       </TableContainer>
 
       <TablePagination
-        rowsPerPageOptions={[10, 20, 30]}
+        rowsPerPageOptions={[5, 10, 20, 30]}
         component="div"
         count={pacientes.length}
         rowsPerPage={filasPerPagina}

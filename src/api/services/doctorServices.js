@@ -80,3 +80,16 @@ export const eliminarDoctor = async (id) => {
     await API.delete(`${API_ROUTES.doctores}/${id}`);
     return true;
 };
+
+// 👉 Obtener pacientes por ID de doctor (GET /api/doctores/{id}/pacientes)
+export const obtenerPacientesDelDoctor = async (idDoctor) => {
+    const response = await API.get(`${API_ROUTES.doctores}/${idDoctor}/pacientes`);
+    return response.data.map(p => ({
+        id: p.idPaciente,
+        nombres: p.nombres,
+        apellidos: p.apellidos,
+        dni: p.dni,
+        celular: p.celular,
+        fechaNacimiento: p.fechaNacimiento,
+    }));
+};

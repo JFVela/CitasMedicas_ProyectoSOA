@@ -22,10 +22,10 @@ const tabs = [
     label: "Dashboard",
     value: "0",
     icon: <LayoutDashboardIcon />,
-    path: "/doctor/dashboard",
+    path: "/doctor",
   },
   {
-    label: "Pacientes",
+    label: "Lista de Pacientes",
     value: "1",
     icon: <GroupIcon />,
     path: "/doctor/pacientes",
