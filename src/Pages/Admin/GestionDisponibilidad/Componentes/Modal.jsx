@@ -16,7 +16,6 @@ const FormSection = styled.section`
   flex-wrap: wrap;
   gap: 32px;
   margin-top: 8px;
-
   @media (max-width: 768px) {
     flex-direction: column;
   }
@@ -47,11 +46,11 @@ const ModalDisponibilidad = ({
     fechaFin: "",
     estado: "Activo",
   });
-
   const [errores, setErrores] = useState({});
 
   useEffect(() => {
     if (registro) {
+      console.log("📝 Cargando registro en modal:", registro);
       setFormulario({
         doctor: registro.doctor,
         sede: registro.sede,
@@ -61,6 +60,7 @@ const ModalDisponibilidad = ({
         estado: registro.estado,
       });
     } else {
+      console.log("📝 Nuevo registro - limpiando formulario");
       setFormulario({
         doctor: { id: "", nombre: "" },
         sede: { id: "", nombre: "" },
@@ -74,14 +74,21 @@ const ModalDisponibilidad = ({
   }, [registro, abierto]);
 
   const manejarCambio = (campo, valor) => {
+    console.log(`🔄 Cambiando ${campo}:`, valor);
+
     switch (campo) {
       case "doctorId":
         const doctorSeleccionado = doctores.find((d) => d.id === valor);
+        console.log("👨‍⚕️ Doctor seleccionado:", doctorSeleccionado);
         setFormulario({
           ...formulario,
           doctor: {
             id: valor,
             nombre: doctorSeleccionado
+              ? `${doctorSeleccionado.nombres} ${doctorSeleccionado.apellidos}`
+              : "",
+            // ✅ Agregar campos adicionales si es necesario
+            nombreCompleto: doctorSeleccionado
               ? `${doctorSeleccionado.nombres} ${doctorSeleccionado.apellidos}`
               : "",
           },
@@ -90,6 +97,7 @@ const ModalDisponibilidad = ({
 
       case "sedeId":
         const sedeSeleccionada = sedes.find((s) => s.id === valor);
+        console.log("🏥 Sede seleccionada:", sedeSeleccionada);
         setFormulario({
           ...formulario,
           sede: {
@@ -101,11 +109,21 @@ const ModalDisponibilidad = ({
 
       case "horarioId":
         const horarioSeleccionado = horarios.find((h) => h.id === valor);
+        console.log("⏰ Horario seleccionado:", horarioSeleccionado);
         setFormulario({
           ...formulario,
           horario: {
             id: valor,
             nombre: horarioSeleccionado
+              ? `${
+                  horarioSeleccionado.diaSemana
+                } ${horarioSeleccionado.horaInicio?.slice(
+                  0,
+                  5
+                )} - ${horarioSeleccionado.horaFin?.slice(0, 5)}`
+              : "",
+            // ✅ Agregar campos adicionales
+            textoCompleto: horarioSeleccionado
               ? `${
                   horarioSeleccionado.diaSemana
                 } ${horarioSeleccionado.horaInicio?.slice(
@@ -172,8 +190,18 @@ const ModalDisponibilidad = ({
 
   const manejarEnvio = (e) => {
     e.preventDefault();
+    console.log("📤 Enviando formulario:", formulario);
+
     if (validarFormulario()) {
-      onGuardar({ ...formulario, id: registro?.id || null });
+      // ✅ Asegurar que se envíen los IDs correctos
+      const registroParaEnviar = {
+        ...formulario,
+        id: registro?.id || null,
+      };
+      console.log("✅ Registro final a enviar:", registroParaEnviar);
+      onGuardar(registroParaEnviar);
+    } else {
+      console.log("❌ Formulario inválido:", errores);
     }
   };
 
@@ -205,7 +233,9 @@ const ModalDisponibilidad = ({
                   .filter((d) => d.estado === "Activo")
                   .map((doctor) => (
                     <MenuItem key={doctor.id} value={doctor.id}>
-                      {`${doctor.nombres} ${doctor.apellidos} - ${doctor.especialidad.nombre}`}
+                      {`${doctor.nombres} ${doctor.apellidos} - ${
+                        doctor.especialidad?.nombre || "Sin especialidad"
+                      }`}
                     </MenuItem>
                   ))}
               </TextField>
@@ -230,6 +260,7 @@ const ModalDisponibilidad = ({
                     </MenuItem>
                   ))}
               </TextField>
+
               <TextField
                 select
                 fullWidth
@@ -255,7 +286,7 @@ const ModalDisponibilidad = ({
               </TextField>
             </Column>
 
-            {/* COLUMNA DERECHA: Horario, Fechas, Estado */}
+            {/* COLUMNA DERECHA: Fechas y Estado */}
             <Column>
               <TextField
                 fullWidth
@@ -296,7 +327,6 @@ const ModalDisponibilidad = ({
             </Column>
           </FormSection>
         </DialogContent>
-
         <DialogActions sx={{ px: 3, pb: 2 }}>
           <Button onClick={onCerrar} color="secondary" disabled={guardando}>
             Cancelar

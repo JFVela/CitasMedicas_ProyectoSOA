@@ -11,12 +11,12 @@ import ModalDisponibilidad from "./Componentes/Modal";
 import {
   obtenerDisponibilidades,
   crearDisponibilidad,
-  editarDisponibilidad,
+  actualizarDisponibilidad,
   eliminarDisponibilidad,
-} from "./data";
-import { obtenerDoctores } from "./dataDoctor";
-import { obtenerSedes } from "./dataSede";
-import { obtenerHorarios } from "./dataHorario";
+} from "../../../api/services/disponibilidadServices";
+import { obtenerDoctores } from "../../../api/services/doctorServices";
+import { obtenerSedes } from "../../../api/services/sedeServices";
+import { obtenerHorarios } from "../../../api/services/horarioServices";
 
 const cabeceras = [
   { id: "doctor", label: "Doctor" },
@@ -63,11 +63,20 @@ function CrudDisponibilidad() {
           obtenerSedes(),
           obtenerHorarios(),
         ]);
+
+      console.log("📊 Datos cargados:", {
+        disponibilidades: disponibilidadAPI.length,
+        doctores: doctorAPI.length,
+        sedes: sedeAPI.length,
+        horarios: horarioAPI.length,
+      });
+
       setDisponibilidades(disponibilidadAPI);
       setDoctores(doctorAPI);
       setSedes(sedeAPI);
       setHorarios(horarioAPI);
     } catch (err) {
+      console.error("❌ Error al cargar datos:", err);
       setError(err.message || "Error al cargar datos.");
     } finally {
       setCargando(false);
@@ -85,6 +94,7 @@ function CrudDisponibilidad() {
   };
 
   const editarRegistro = (registro) => {
+    console.log("✏️ Editando registro:", registro);
     setRegistroEditando(registro);
     setModalAbierto(true);
   };
@@ -92,17 +102,27 @@ function CrudDisponibilidad() {
   const guardarRegistro = async (registro) => {
     try {
       setGuardando(true);
+      console.log("💾 Guardando registro:", registro);
+
       if (!registro.id) {
+        // ✅ CREAR
         const nuevo = await crearDisponibilidad(registro);
         setDisponibilidades([...disponibilidades, nuevo]);
+        console.log("✅ Disponibilidad creada exitosamente");
       } else {
-        const actualizado = await editarDisponibilidad(registro.id, registro);
+        // ✅ ACTUALIZAR
+        const actualizado = await actualizarDisponibilidad(
+          registro.id,
+          registro
+        );
         setDisponibilidades(
           disponibilidades.map((d) => (d.id === registro.id ? actualizado : d))
         );
+        console.log("✅ Disponibilidad actualizada exitosamente");
       }
       cerrarModal();
     } catch (error) {
+      console.error("❌ Error al guardar:", error);
       setError("Error al guardar disponibilidad: " + error.message);
     } finally {
       setGuardando(false);
@@ -113,7 +133,9 @@ function CrudDisponibilidad() {
     try {
       await eliminarDisponibilidad(id);
       setDisponibilidades(disponibilidades.filter((d) => d.id !== id));
+      console.log("✅ Disponibilidad eliminada exitosamente");
     } catch (error) {
+      console.error("❌ Error al eliminar:", error);
       setError("Error al eliminar disponibilidad: " + error.message);
     }
   };
@@ -132,13 +154,19 @@ function CrudDisponibilidad() {
     setPagina(0);
   };
 
+  // ✅ CORREGIDO: Filtrado mejorado
   const filtradas = disponibilidades.filter((d) => {
     const texto = busqueda.toLowerCase();
+    const doctorNombre = d.doctor?.nombreCompleto || "";
+    const sedeNombre = d.sede?.nombre || "";
+    const horarioTexto = d.horario?.textoCompleto || "";
+    const estadoTexto = d.estado || "";
+
     return (
-      d.doctor.nombre.toLowerCase().includes(texto) ||
-      d.sede.nombre.toLowerCase().includes(texto) ||
-      d.horario.nombre.toLowerCase().includes(texto) ||
-      d.estado.toLowerCase().includes(texto)
+      doctorNombre.toLowerCase().includes(texto) ||
+      sedeNombre.toLowerCase().includes(texto) ||
+      horarioTexto.toLowerCase().includes(texto) ||
+      estadoTexto.toLowerCase().includes(texto)
     );
   });
 
@@ -168,8 +196,9 @@ function CrudDisponibilidad() {
       <Container maxWidth="lg">
         <Box sx={{ my: 4 }}>
           <Typography variant="h4" align="center" gutterBottom>
-            Gestión de Disponibilidad
+            Gestión de Disponibilidad Médica
           </Typography>
+
           {error && (
             <Alert
               severity="error"
@@ -179,6 +208,7 @@ function CrudDisponibilidad() {
               {error}
             </Alert>
           )}
+
           <TablaDisponibilidad
             cabeceras={cabeceras}
             registros={filtradas}
@@ -192,6 +222,7 @@ function CrudDisponibilidad() {
             onCambioPagina={manejarCambioPagina}
             onCambioFilasPorPagina={manejarCambioFilas}
           />
+
           <ModalDisponibilidad
             abierto={modalAbierto}
             onCerrar={cerrarModal}

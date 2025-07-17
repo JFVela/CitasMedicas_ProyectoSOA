@@ -35,7 +35,7 @@ const TablaDisponibilidad = ({
   const confirmarEliminacion = (disponibilidad) => {
     Swal.fire({
       title: "¿Estás seguro?",
-      html: `¿Desea eliminar la disponibilidad del Dr. <strong>${disponibilidad.doctor.nombre}</strong> en <strong>${disponibilidad.sede.nombre}</strong>?`,
+      html: `¿Desea eliminar la disponibilidad del Dr. <strong>${disponibilidad.doctor.nombreCompleto}</strong> en <strong>${disponibilidad.sede.nombre}</strong>?`,
       icon: "warning",
       showCancelButton: true,
       confirmButtonColor: "#3085d6",
@@ -83,14 +83,15 @@ const TablaDisponibilidad = ({
     return fechaObj.toLocaleDateString("es-ES");
   };
 
+  // ✅ CORREGIDO: Función para renderizar celdas
   const renderizarCelda = (disponibilidad, cabecera) => {
     switch (cabecera.id) {
       case "doctor":
-        return disponibilidad.doctor.nombre;
+        return disponibilidad.doctor.nombreCompleto || "Sin Doctor"; // ✅ Usar nombreCompleto
       case "sede":
-        return disponibilidad.sede.nombre;
+        return disponibilidad.sede.nombre || "Sin Sede"; // ✅ Usar nombre de sede
       case "horario":
-        return disponibilidad.horario.nombre;
+        return disponibilidad.horario.textoCompleto || "Sin Horario"; // ✅ Usar textoCompleto
       case "fechaInicio":
       case "fechaFin":
         return formatearFecha(disponibilidad[cabecera.id]);
@@ -146,6 +147,7 @@ const TablaDisponibilidad = ({
           Agregar Disponibilidad
         </Button>
       </Box>
+
       <TableContainer sx={{ maxHeight: 440 }}>
         <Table stickyHeader aria-label="tabla de disponibilidades">
           <TableHead>
@@ -199,6 +201,7 @@ const TablaDisponibilidad = ({
           </TableBody>
         </Table>
       </TableContainer>
+
       <TablePagination
         rowsPerPageOptions={[10, 20, 30]}
         component="div"
