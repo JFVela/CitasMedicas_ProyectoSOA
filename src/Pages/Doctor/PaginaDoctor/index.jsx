@@ -10,6 +10,8 @@ import {
 import { TabContext } from "@mui/lab";
 import { useState, useEffect } from "react";
 import Navegador from "../../../Components/NavTabs/index.jsx";
+import Swal from "sweetalert2";
+import LogoutIcon from "@mui/icons-material/Logout";
 
 // ICONOS
 import GroupIcon from "@mui/icons-material/Group"; // Pacientes
@@ -42,6 +44,11 @@ const tabs = [
     icon: <AssignmentIcon />,
     path: "/doctor/historial-clinico",
   },
+  {
+  label: "Cerrar Sesión",
+  value: "4", // Asegúrate de que no colisione con otros tabs
+  icon: <LogoutIcon color="error" />,
+}
 ];
 
 function PaginaBase() {
@@ -58,10 +65,28 @@ function PaginaBase() {
   const getTabValue = () =>
     tabs.find((tab) => tab.path === location.pathname)?.value || false;
 
-  const handleChange = (event, newValue) => {
+const handleChange = (event, newValue) => {
+  if (newValue === "4") {
+    Swal.fire({
+      title: "¿Cerrar sesión?",
+      text: "Se cerrará tu sesión actual.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Sí, salir",
+      cancelButtonText: "Cancelar",
+    }).then((result) => {
+      if (result.isConfirmed) {
+        localStorage.removeItem("usuario");
+        navigate("/login", { replace: true });
+      }
+    });
+  } else {
     const selectedTab = tabs.find((tab) => tab.value === newValue);
-    if (selectedTab) navigate(selectedTab.path);
-  };
+    if (selectedTab?.path) {
+      navigate(selectedTab.path);
+    }
+  }
+};
 
   return (
     <Box

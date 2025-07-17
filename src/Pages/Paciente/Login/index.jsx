@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Avatar,
   Button,
@@ -13,6 +13,7 @@ import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 import { createTheme, ThemeProvider, styled } from "@mui/material/styles";
 import Swal from "sweetalert2";
 import { useNavigate } from "react-router-dom";
+import { login } from "../../../api/Auth/authApi";
 
 const theme = createTheme();
 
@@ -41,37 +42,63 @@ const LinkBox = styled(Box)(() => ({
 
 export default function LoginRegister() {
   const [modoRegistro, setModoRegistro] = useState(false);
-  const [usuario, setUsuario] = useState("");
-  const [password, setPassword] = useState("");
+  const [credentials, setCredentials] = useState({ email: '', password: '' });
   const navigate = useNavigate();
+  const [error, setError] = useState('');
+
+  //Verificación para que, si el usuario ya está guardado en localStorage,
+  // lo redirija automáticamente al rol correspondiente.
+  useEffect(() => {
+  const usuario = JSON.parse(localStorage.getItem('usuario'));
+  if (usuario) {
+    navigate(`/${usuario.nombreRol}`);
+  }
+}, []);
 
   const handleFlip = () => setModoRegistro((prev) => !prev);
 
-  // Usuarios hardcodeados
-  const usuarios = [
-    { username: "juan", password: "123456", rol: "doctor" },
-    { username: "alex", password: "123456", rol: "admin" },
-    { username: "maria", password: "admin123", rol: "admin" },
-  ];
+  const handleChange = (e) => {
+        setError(''); // Limpiar mensaje
+        setCredentials({
+        ...credentials,
+        [e.target.name]: e.target.value
+        });
+    };
 
-  const handleLogin = (e) => {
-    e.preventDefault();
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        //setError('');
+        
+        try {
+            if (!credentials.email || !credentials.password) {
+            //setError(alert);
+            alert("Por favor, complete todos los campos");
+            return;
+            }
+            const data = await login(credentials);
+            localStorage.setItem('usuario', JSON.stringify(data));
+            navigate(`/${data.nombreRol}`);
+            //navigate('/home');
 
-    const user = usuarios.find(
-      (u) => u.username === usuario && u.password === password
-    );
+        } catch (error) {
+            if (error.response && error.response.status === 401) {
+                Swal.fire({
+                  icon: "error",
+                  title: "Credenciales incorrectas",
+                  text: "Verifica tu usuario o contraseña",
+                });
+                //setError("Credenciales incorrectas. Inténtalo nuevamente.");
+            } else {
+              Swal.fire({
+                  icon: "error",
+                  title: "Error al conectar con el servidor.",
+                  text: "Verifica tu servidor porfavor",
+                });
+                //setError("Error al conectar con el servidor.");
+            }
+        }
+    };
 
-    if (user) {
-      // Redirigir según el rol
-      navigate(`/${user.rol}`);
-    } else {
-      Swal.fire({
-        icon: "error",
-        title: "Credenciales incorrectas",
-        text: "Verifica tu usuario o contraseña",
-      });
-    }
-  };
 
   return (
     <ThemeProvider theme={theme}>
@@ -98,22 +125,24 @@ export default function LoginRegister() {
               <Typography variant="h5">Iniciar Sesión</Typography>
             </Box>
 
-            <FormContainer component="form" onSubmit={handleLogin}>
+            <FormContainer component="form" onSubmit={handleSubmit}>
               <TextField
+                name="email"
                 label="Usuario"
                 fullWidth
                 required
                 autoFocus
-                value={usuario}
-                onChange={(e) => setUsuario(e.target.value)}
+                value={credentials.email}
+                onChange={handleChange}
               />
               <TextField
+                name="password"
                 label="Contraseña"
                 fullWidth
                 required
                 type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                value={credentials.password}
+                onChange={handleChange}
               />
               <Button
                 type="submit"
@@ -124,6 +153,7 @@ export default function LoginRegister() {
                 Ingresar
               </Button>
             </FormContainer>
+            {error && <div className="alert alert-danger">{error}</div>}
 
             <LinkBox>
               <Link

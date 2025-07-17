@@ -6,10 +6,14 @@ import {
   AppBar,
   useTheme,
   useMediaQuery,
+  IconButton,
+  Tooltip,
 } from "@mui/material";
+import LogoutIcon from "@mui/icons-material/Logout";
 import { TabContext } from "@mui/lab";
 import { useState, useEffect } from "react";
 import Navegador from "../../../Components/NavTabs/index.jsx";
+import Swal from "sweetalert2";
 
 // ICONOS
 import SpaceDashboardIcon from "@mui/icons-material/SpaceDashboard";
@@ -70,6 +74,11 @@ const tabs = [
     icon: <AssignmentIcon />,
     path: "/admin/gestionCitas", // Ruta temporal
   },
+  {
+    label: "Cerrar Sesion",
+    value: "10",
+    icon: <LogoutIcon color="error" />,
+  },
 ];
 
 function PaginaBase() {
@@ -83,13 +92,41 @@ function PaginaBase() {
     setMounted(true);
   }, []);
 
+  //limpiar el usuario y redirigir al login:
+  // const handleLogout = () => {
+  //   localStorage.removeItem("usuario");
+  //   navigate("/login"), { replace: true }; //Esto evita que el usuario regrese con el botón de "atrás" a una vista protegida.
+  // };
+  const handleChange = (event, newValue) => {
+  if (newValue === "10") {
+    Swal.fire({
+      title: "¿Cerrar sesión?",
+      text: "Se cerrará tu sesión actual.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Sí, salir",
+      cancelButtonText: "Cancelar",
+    }).then((result) => {
+      if (result.isConfirmed) {
+        localStorage.removeItem("usuario");
+        navigate("/login", { replace: true });
+      }
+    });
+  } else {
+    const selectedTab = tabs.find((tab) => tab.value === newValue);
+    if (selectedTab && selectedTab.path) {
+      navigate(selectedTab.path);
+    }
+  }
+};
+
   const getTabValue = () =>
     tabs.find((tab) => tab.path === location.pathname)?.value || false;
 
-  const handleChange = (event, newValue) => {
-    const selectedTab = tabs.find((tab) => tab.value === newValue);
-    if (selectedTab) navigate(selectedTab.path);
-  };
+  // const handleChange = (event, newValue) => {
+  //   const selectedTab = tabs.find((tab) => tab.value === newValue);
+  //   if (selectedTab) navigate(selectedTab.path);
+  // };
 
   return (
     <Box
@@ -118,6 +155,13 @@ function PaginaBase() {
             onChange={handleChange}
             isMobile={isMobile}
           />
+          {/* //Dentro del AppBar, después de */}
+          {/* <Tooltip title="Cerrar sesión">
+            <IconButton onClick={handleLogout} sx={{ ml: "auto" }}>
+              <LogoutIcon color="error" />
+            </IconButton>
+          </Tooltip> */}
+
         </AppBar>
 
         <Container

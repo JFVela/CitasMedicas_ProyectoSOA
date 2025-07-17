@@ -27,6 +27,9 @@ import CrudCita from "./Pages/Admin/GestionCitas";
 // Página de Error 404
 import Error404 from "./Pages/Error404";
 
+import ProtectedRoute from "./Components/ProtectedRoute";
+import PublicRoute from "./Components/PublicRoutes";
+
 function AppRoutes() {
   return (
     <Routes>
@@ -34,21 +37,39 @@ function AppRoutes() {
       <Route path="/" element={<PaginaPaciente />}>
         <Route index element={<Inicio />} />
         <Route path="agendar" element={<Agendar />} />
-        <Route path="login" element={<Login />} />
+        <Route
+          path="/login"
+          element={
+            <PublicRoute>
+              <Login />
+            </PublicRoute>
+          }
+        />
         <Route path="*" element={<Error404 />} />
       </Route>
 
       {/* Rutas del Doctor */}
-      <Route path="/doctor" element={<PaginaDoctor />}>
+      {/* <Route path="/doctor" element={<PaginaDoctor />}>
         <Route index element={<InicioDoctor />} />
         <Route path="pacientes" element={<Pacientes />} />
         <Route path="citas-medicas" element={<CitasMedicas />} />
         <Route path="historial-clinico" element={<HistorialClinico />} />
         <Route path="*" element={<Error404 />} />
+      </Route> */}
+      {/* Rutas protegidas para Doctor */}
+      <Route element={<ProtectedRoute allowedRoles={['doctor']} />}>
+        <Route path="/doctor" element={<PaginaDoctor />}>
+          <Route index element={<InicioDoctor />} />
+          <Route path="pacientes" element={<Pacientes />} />
+          <Route path="citas-medicas" element={<CitasMedicas />} />
+          <Route path="historial-clinico" element={<HistorialClinico />} />
+          <Route path="*" element={<Error404 />} />
+        </Route>
       </Route>
 
+
       {/* Rutas del Admin */}
-      <Route path="/admin" element={<PaginaAdmin />}>
+      {/* <Route path="/admin" element={<PaginaAdmin />}>
         <Route index element={<InicioAdmin />} />
         <Route path="gestionDoctor" element={<AgregarDoctor />} />
         <Route path="gestionEspecialidad" element={<AgregarEspecialidad />} />
@@ -58,7 +79,22 @@ function AppRoutes() {
         <Route path="gestionDisponibilidad" element={<CrudDisponibilidad />} />
         <Route path="gestionCitas" element={<CrudCita />} />
         <Route path="*" element={<Error404 />} />
+      </Route> */}
+      {/* Rutas protegidas para Admin */}
+      <Route element={<ProtectedRoute allowedRoles={['admin']} />}>
+        <Route path="/admin" element={<PaginaAdmin />}>
+          <Route index element={<InicioAdmin />} />
+          <Route path="gestionDoctor" element={<AgregarDoctor />} />
+          <Route path="gestionEspecialidad" element={<AgregarEspecialidad />} />
+          <Route path="gestionPaciente" element={<AgregarPaciente />} />
+          <Route path="gestionSede" element={<CrudSede />} />
+          <Route path="gestionHorario" element={<CrudHorario />} />
+          <Route path="gestionDisponibilidad" element={<CrudDisponibilidad />} />
+          <Route path="gestionCitas" element={<CrudCita />} />
+          <Route path="*" element={<Error404 />} />
+        </Route>
       </Route>
+
 
       {/* Ruta para errores */}
       <Route path="*" element={<Error404 />} />
