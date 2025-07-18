@@ -46,7 +46,8 @@ function ListaCitasDoctor() {
   const [guardandoHistorial, setGuardandoHistorial] = useState(false);
 
   // ✅ ID del doctor fijo para pruebas
-  const doctorId = 56;
+  const usuario = JSON.parse(localStorage.getItem("usuario"));
+  const doctorId = usuario?.idUsuario;
 
   useEffect(() => {
     cargarCitasDelDoctor();

@@ -6,8 +6,11 @@ import Typography from "@mui/material/Typography";
 import Box from "@mui/material/Box";
 import CircularProgress from "@mui/material/CircularProgress";
 import Alert from "@mui/material/Alert";
+import Swal from "sweetalert2";
+
 import TablaDisponibilidad from "./Componentes/Tabla";
 import ModalDisponibilidad from "./Componentes/Modal";
+
 import {
   obtenerDisponibilidades,
   crearDisponibilidad,
@@ -56,6 +59,7 @@ function CrudDisponibilidad() {
     try {
       setCargando(true);
       setError(null);
+
       const [disponibilidadAPI, doctorAPI, sedeAPI, horarioAPI] =
         await Promise.all([
           obtenerDisponibilidades(),
@@ -64,20 +68,13 @@ function CrudDisponibilidad() {
           obtenerHorarios(),
         ]);
 
-      console.log("📊 Datos cargados:", {
-        disponibilidades: disponibilidadAPI.length,
-        doctores: doctorAPI.length,
-        sedes: sedeAPI.length,
-        horarios: horarioAPI.length,
-      });
-
       setDisponibilidades(disponibilidadAPI);
       setDoctores(doctorAPI);
       setSedes(sedeAPI);
       setHorarios(horarioAPI);
     } catch (err) {
-      console.error("❌ Error al cargar datos:", err);
       setError(err.message || "Error al cargar datos.");
+      Swal.fire("Error", err.message || "Error al cargar datos.", "error");
     } finally {
       setCargando(false);
     }
@@ -94,49 +91,72 @@ function CrudDisponibilidad() {
   };
 
   const editarRegistro = (registro) => {
-    console.log("✏️ Editando registro:", registro);
     setRegistroEditando(registro);
     setModalAbierto(true);
   };
 
-  const guardarRegistro = async (registro) => {
+  const guardarRegistro = async (registro, mostrarNotificacion = true) => {
     try {
       setGuardando(true);
-      console.log("💾 Guardando registro:", registro);
-
       if (!registro.id) {
-        // ✅ CREAR
         const nuevo = await crearDisponibilidad(registro);
-        setDisponibilidades([...disponibilidades, nuevo]);
-        console.log("✅ Disponibilidad creada exitosamente");
+        setDisponibilidades((prev) => [...prev, nuevo]);
+        if (mostrarNotificacion) {
+          Swal.fire(
+            "Registro creado",
+            "Disponibilidad registrada correctamente",
+            "success"
+          );
+        }
       } else {
-        // ✅ ACTUALIZAR
         const actualizado = await actualizarDisponibilidad(
           registro.id,
           registro
         );
-        setDisponibilidades(
-          disponibilidades.map((d) => (d.id === registro.id ? actualizado : d))
+        setDisponibilidades((prev) =>
+          prev.map((d) => (d.id === registro.id ? actualizado : d))
         );
-        console.log("✅ Disponibilidad actualizada exitosamente");
+        if (mostrarNotificacion) {
+          Swal.fire(
+            "Registro actualizado",
+            "Disponibilidad actualizada correctamente",
+            "success"
+          );
+        }
       }
       cerrarModal();
     } catch (error) {
-      console.error("❌ Error al guardar:", error);
       setError("Error al guardar disponibilidad: " + error.message);
+      Swal.fire("Error", "No se pudo guardar la disponibilidad", "error");
     } finally {
       setGuardando(false);
     }
   };
 
   const eliminarRegistro = async (id) => {
+    const confirmar = await Swal.fire({
+      title: "¿Eliminar?",
+      text: "Esta acción no se puede deshacer.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#3085d6",
+      confirmButtonText: "Sí, eliminar",
+    });
+
+    if (!confirmar.isConfirmed) return;
+
     try {
       await eliminarDisponibilidad(id);
       setDisponibilidades(disponibilidades.filter((d) => d.id !== id));
-      console.log("✅ Disponibilidad eliminada exitosamente");
+      Swal.fire(
+        "Eliminado",
+        "Disponibilidad eliminada correctamente",
+        "success"
+      );
     } catch (error) {
-      console.error("❌ Error al eliminar:", error);
       setError("Error al eliminar disponibilidad: " + error.message);
+      Swal.fire("Error", "No se pudo eliminar la disponibilidad", "error");
     }
   };
 
@@ -154,7 +174,6 @@ function CrudDisponibilidad() {
     setPagina(0);
   };
 
-  // ✅ CORREGIDO: Filtrado mejorado
   const filtradas = disponibilidades.filter((d) => {
     const texto = busqueda.toLowerCase();
     const doctorNombre = d.doctor?.nombreCompleto || "";

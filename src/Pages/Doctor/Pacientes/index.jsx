@@ -38,7 +38,8 @@ function ListaPacientesDoctor() {
   const [error, setError] = useState(null);
 
   // ✅ ID del doctor fijo para pruebas
-  const doctorId = 56;
+  const usuario = JSON.parse(localStorage.getItem("usuario"));
+  const doctorId = usuario?.idUsuario;
 
   useEffect(() => {
     cargarPacientesDelDoctor();

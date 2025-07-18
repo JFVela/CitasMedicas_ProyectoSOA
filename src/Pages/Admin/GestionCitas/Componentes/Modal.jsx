@@ -26,39 +26,22 @@ const ModalCita = ({
   cita,
   guardando = false,
 }) => {
-  const [formulario, setFormulario] = useState({
-    estado: "",
-    motivo: "",
-  });
+  const [formulario, setFormulario] = useState({ estado: "" });
   const [errores, setErrores] = useState({});
 
   useEffect(() => {
     if (cita && abierto) {
-      setFormulario({
-        estado: cita.estado || "",
-        motivo: cita.motivo || "",
-      });
+      setFormulario({ estado: cita.estado || "" });
     } else {
-      setFormulario({
-        estado: "",
-        motivo: "",
-      });
+      setFormulario({ estado: "" });
     }
     setErrores({});
   }, [cita, abierto]);
 
   const manejarCambio = (campo, valor) => {
-    setFormulario({
-      ...formulario,
-      [campo]: valor,
-    });
-
-    // Limpiar error del campo
+    setFormulario({ ...formulario, [campo]: valor });
     if (errores[campo]) {
-      setErrores({
-        ...errores,
-        [campo]: "",
-      });
+      setErrores({ ...errores, [campo]: "" });
     }
   };
 
@@ -71,11 +54,6 @@ const ModalCita = ({
       esValido = false;
     }
 
-    if (!formulario.motivo || formulario.motivo.trim() === "") {
-      nuevosErrores.motivo = "El motivo de consulta es requerido";
-      esValido = false;
-    }
-
     setErrores(nuevosErrores);
     return esValido;
   };
@@ -83,7 +61,7 @@ const ModalCita = ({
   const manejarEnvio = (e) => {
     e.preventDefault();
     if (validarFormulario()) {
-      onGuardar(formulario);
+      onGuardar({ ...cita, estado: formulario.estado }); // ← devolvemos la cita con nuevo estado
     }
   };
 
@@ -100,10 +78,9 @@ const ModalCita = ({
       fullWidth
       maxWidth="sm"
     >
-      <DialogTitle>Editar Cita Médica</DialogTitle>
+      <DialogTitle>Editar Estado de Cita</DialogTitle>
       <form onSubmit={manejarEnvio}>
         <DialogContent dividers>
-          {/* Información de la cita (solo lectura) */}
           {cita && (
             <Box sx={{ mb: 3 }}>
               <Typography variant="h6" gutterBottom>
@@ -125,20 +102,21 @@ const ModalCita = ({
                   <strong>Sede:</strong> {cita.sede}
                 </Typography>
                 <Typography variant="body2">
-                  <strong>Fecha de registro:</strong> {formatearFecha(cita.fecha)}
+                  <strong>Fecha:</strong> {formatearFecha(cita.fecha)}
                 </Typography>
                 <Typography variant="body2">
                   <strong>Horario:</strong> {cita.horario}
+                </Typography>
+                <Typography variant="body2">
+                  <strong>Motivo de consulta:</strong> {cita.motivo}
                 </Typography>
               </Box>
               <Divider />
             </Box>
           )}
 
-          {/* Campos editables */}
           <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
-            <Typography variant="h6">Campos Editables</Typography>
-
+            <Typography variant="h6">Cambiar Estado</Typography>
             <TextField
               select
               fullWidth
@@ -158,24 +136,9 @@ const ModalCita = ({
                 </MenuItem>
               ))}
             </TextField>
-
-            <TextField
-              fullWidth
-              label="Motivo de Consulta"
-              value={formulario.motivo}
-              onChange={(e) => manejarCambio("motivo", e.target.value)}
-              error={!!errores.motivo}
-              helperText={
-                errores.motivo || "Describa el motivo de la consulta médica"
-              }
-              variant="outlined"
-              multiline
-              rows={4}
-              disabled={guardando}
-              placeholder="Ingrese el motivo de la consulta..."
-            />
           </Box>
         </DialogContent>
+
         <DialogActions sx={{ px: 3, pb: 2 }}>
           <Button onClick={onCerrar} color="secondary" disabled={guardando}>
             Cancelar
