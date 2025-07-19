@@ -255,8 +255,8 @@ const ModalPaciente = ({
                 onChange={manejarCambio}
                 disabled={guardando}
               >
-                <MenuItem value="M">Masculino</MenuItem>
-                <MenuItem value="F">Femenino</MenuItem>
+                <MenuItem value="Masculino">Masculino</MenuItem>
+                <MenuItem value="Femenino">Femenino</MenuItem>
               </TextField>
             </CampoFormulario>
 

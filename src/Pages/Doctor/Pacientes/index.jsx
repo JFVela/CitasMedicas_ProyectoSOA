@@ -39,7 +39,7 @@ function ListaPacientesDoctor() {
 
   // ✅ ID del doctor fijo para pruebas
   const usuario = JSON.parse(localStorage.getItem("usuario"));
-  const doctorId = usuario?.idUsuario;
+  const doctorId = 65;
 
   useEffect(() => {
     cargarPacientesDelDoctor();

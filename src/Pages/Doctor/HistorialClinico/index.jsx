@@ -149,7 +149,7 @@ function CrudHistorialMedico() {
       <Container maxWidth="lg">
         <Box sx={{ my: 4 }}>
           <Typography variant="h4" align="center" gutterBottom>
-            Gestión de Historiales Médicos - Administrador
+            Historias Médicas del Doctor
           </Typography>
           {error && (
             <Alert
